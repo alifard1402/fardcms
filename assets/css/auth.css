@@ -1,0 +1,411 @@
+/* ═══════════════════════════════════════════════════════════
+   فرد سی‌ام‌اس — استایل مشترک صفحه‌های احراز هویت
+   ورود، ثبت‌نام، فراموشی رمز و بازیابی رمز عبور
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --accent:   #7850ff;
+  --accent-2: #ff6496;
+  --gradient: linear-gradient(135deg, #7850ff 0%, #ff6496 100%);
+  --success:  #4ade80;
+  --danger:   #f87171;
+  --warning:  #fbbf24;
+  --ease:     cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: Vazirmatn, -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: #0a0a0f;
+  color: #fff;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── پس‌زمینه متحرک ─────────────────────────────────────── */
+.bg-gradient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(120, 80, 255, 0.16) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(255, 100, 150, 0.11) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 85%, rgba(80, 200, 255, 0.09) 0%, transparent 50%);
+  animation: bgShift 22s ease-in-out infinite alternate;
+}
+
+@keyframes bgShift {
+  0%   { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.1) rotate(3deg); }
+}
+
+.orb {
+  position: fixed;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  animation: float 16s ease-in-out infinite;
+  pointer-events: none;
+}
+.orb-1 { width: 300px; height: 300px; background: rgba(120, 80, 255, 0.3);  top: 8%;  right: 10%; }
+.orb-2 { width: 250px; height: 250px; background: rgba(255, 100, 150, 0.24); bottom: 16%; left: 12%; animation-delay: -5s; }
+.orb-3 { width: 200px; height: 200px; background: rgba(80, 200, 255, 0.18);  top: 46%; left: 46%; animation-delay: -10s; }
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -30px) scale(1.05); }
+  66%      { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* ─── کارت ───────────────────────────────────────────────── */
+.auth-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 424px;
+  padding: 44px 38px;
+  background: rgba(255, 255, 255, 0.032);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.045),
+    0 30px 60px -12px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(28px);
+  animation: cardEnter 0.75s var(--ease) forwards;
+}
+.auth-card.wide { max-width: 500px; }
+
+@keyframes cardEnter {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── سرصفحه ─────────────────────────────────────────────── */
+.auth-header { text-align: center; margin-bottom: 34px; }
+
+.auth-logo {
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 19px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 27px;
+  color: #fff;
+  background: var(--gradient);
+  box-shadow: 0 10px 30px -5px rgba(120, 80, 255, 0.45);
+  animation: logoFloat 3.4s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.auth-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin-bottom: 8px;
+}
+.auth-subtitle {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.9;
+}
+
+/* ─── فرم ────────────────────────────────────────────────── */
+.form-group { margin-bottom: 20px; }
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.input-wrapper { position: relative; }
+
+.form-input {
+  width: 100%;
+  padding: 15px 48px 15px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14.5px;
+  outline: none;
+  transition: background-color 0.28s var(--ease), border-color 0.28s var(--ease), box-shadow 0.28s var(--ease);
+}
+.form-input::placeholder { color: rgba(255, 255, 255, 0.28); }
+.form-input:focus {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(120, 80, 255, 0.5);
+  box-shadow: 0 0 0 4px rgba(120, 80, 255, 0.1);
+}
+.form-input.has-error { border-color: rgba(248, 113, 113, 0.55); }
+.form-input.ltr { direction: ltr; text-align: left; }
+.form-input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* فیلد رمز عبور فضای بیشتری برای دکمه نمایش لازم دارد */
+.form-input.with-toggle { padding-left: 48px; }
+
+.input-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.38);
+  pointer-events: none;
+  transition: color 0.28s ease;
+  display: grid;
+}
+.form-input:focus ~ .input-icon { color: var(--accent); }
+
+.toggle-password {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.38);
+  transition: color 0.24s ease;
+  display: grid;
+}
+.toggle-password:hover { color: rgba(255, 255, 255, 0.82); }
+
+.field-error {
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: #fca5a5;
+  line-height: 1.8;
+}
+.field-hint {
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.36);
+  line-height: 1.85;
+}
+
+/* ─── نوار قدرت رمز عبور ─────────────────────────────────── */
+.strength-bar {
+  height: 4px;
+  margin-top: 10px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+}
+.strength-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.35s var(--ease), background-color 0.35s ease;
+}
+.strength-label { margin-top: 7px; font-size: 11.5px; }
+
+/* ─── گزینه‌ها ───────────────────────────────────────────── */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  transition: background-color 0.22s ease, border-color 0.22s ease;
+}
+.custom-checkbox svg { width: 12px; height: 12px; opacity: 0; color: #fff; }
+.custom-checkbox.checked { background: var(--accent); border-color: var(--accent); }
+.custom-checkbox.checked svg { opacity: 1; }
+
+.checkbox-label { font-size: 13px; color: rgba(255, 255, 255, 0.68); }
+
+.link {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.link:hover { color: var(--accent-2); }
+
+/* ─── دکمه اصلی ──────────────────────────────────────────── */
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: var(--gradient);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s ease, opacity 0.2s ease;
+}
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px -10px rgba(120, 80, 255, 0.65);
+}
+.submit-btn:active:not(:disabled) { transform: translateY(0) scale(0.99); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.spinner {
+  width: 17px;
+  height: 17px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── پیام‌ها ────────────────────────────────────────────── */
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 15px;
+  margin-bottom: 22px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.9;
+  animation: messageIn 0.3s var(--ease);
+}
+.message svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 3px; }
+.message-error   { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.28); color: #fca5a5; }
+.message-success { background: rgba(74, 222, 128, 0.1);  border: 1px solid rgba(74, 222, 128, 0.28);  color: #86efac; }
+.message-info    { background: rgba(96, 165, 250, 0.1);  border: 1px solid rgba(96, 165, 250, 0.28);  color: #93c5fd; }
+
+@keyframes messageIn {
+  from { opacity: 0; transform: translateY(-7px); }
+}
+
+/* ─── حالت موفقیت ────────────────────────────────────────── */
+.success-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  padding: 40px;
+  text-align: center;
+  border-radius: 24px;
+  background: rgba(10, 10, 15, 0.93);
+  backdrop-filter: blur(14px);
+  animation: messageIn 0.35s var(--ease);
+}
+.success-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(74, 222, 128, 0.14);
+  border: 2px solid rgba(74, 222, 128, 0.45);
+  color: var(--success);
+  animation: popIn 0.45s var(--ease);
+}
+.success-icon svg { width: 34px; height: 34px; }
+.success-title { font-size: 19px; font-weight: 700; }
+.success-text { font-size: 13.5px; color: rgba(255, 255, 255, 0.55); line-height: 1.9; }
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.6); }
+}
+
+/* ─── جداکننده و پاورقی ──────────────────────────────────── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0;
+}
+.divider-line { flex: 1; height: 1px; background: rgba(255, 255, 255, 0.09); }
+.divider-text { font-size: 12px; color: rgba(255, 255, 255, 0.33); }
+
+.card-footer {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 2;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.back-link:hover { color: #fff; }
+.back-link svg { width: 15px; height: 15px; }
+
+/* ─── فرم دو ستونه ───────────────────────────────────────── */
+.form-row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 480px) {
+  .auth-card { padding: 34px 24px; }
+  .auth-title { font-size: 22px; }
+  .form-row { grid-template-columns: 1fr; }
+  .orb { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .auth-card { opacity: 1; transform: none; }
+}
