@@ -170,7 +170,7 @@ export const MediaPicker = {
             <img v-if="item.is_image" :src="item.thumbnail_url" :alt="item.alt_text || item.original_name" loading="lazy">
             <div v-else class="media-file">
               <Icon :name="mediaIcon(item)" :size="32" />
-              <span>{{ item.original_name }}</span>
+              <span class="slug-text">{{ item.original_name }}</span>
             </div>
             <div class="media-check" v-if="isSelected(item)"><Icon name="check" :size="12" /></div>
             <div class="media-overlay">{{ item.size_label }}</div>

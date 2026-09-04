@@ -195,7 +195,7 @@ export const TermsView = {
                     <span class="cell-title">{{ term.name }}</span>
                   </div>
                 </td>
-                <td><span class="mono faint">{{ term.slug }}</span></td>
+                <td><span class="slug-text faint">{{ term.slug }}</span></td>
                 <td class="muted small truncate" style="max-width:280px">{{ term.description || '—' }}</td>
                 <td>
                   <button class="badge badge-muted" @click="navigate('/posts?term=' + term.id)"
@@ -236,7 +236,7 @@ export const TermsView = {
 
         <div class="field">
           <label class="field-label">نامک</label>
-          <input v-model="form.slug" type="text" class="input input-ltr" placeholder="my-category">
+          <input v-model="form.slug" type="text" class="input input-auto" placeholder="my-category">
           <div class="field-hint">اگر خالی بماند، از نام ساخته می‌شود.</div>
         </div>
 

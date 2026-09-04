@@ -203,7 +203,7 @@ export const MediaView = {
                      :alt="item.alt_text || item.original_name" loading="lazy">
                 <div v-else class="media-file">
                   <Icon :name="mediaIcon(item)" :size="32" />
-                  <span>{{ item.original_name }}</span>
+                  <span class="slug-text">{{ item.original_name }}</span>
                 </div>
                 <div class="media-overlay">{{ item.size_label }}</div>
               </div>
@@ -246,7 +246,7 @@ export const MediaView = {
               <div class="card-body">
                 <div class="field">
                   <label class="field-label">آدرس فایل</label>
-                  <input :value="detail.url" type="text" class="input input-ltr" readonly
+                  <input :value="detail.url" type="text" class="input input-auto" readonly
                          @focus="$event.target.select()">
                   <button class="btn btn-sm btn-secondary btn-block mt" @click="copyUrl(detail.url)">
                     <Icon :name="copied ? 'check' : 'copy'" :size="14" />
@@ -258,7 +258,7 @@ export const MediaView = {
 
                 <div class="flex" style="justify-content:space-between;margin-bottom:7px">
                   <span class="small muted">نام اصلی</span>
-                  <span class="small truncate" style="max-width:150px">{{ detail.original_name }}</span>
+                  <span class="small truncate slug-text" style="max-width:150px">{{ detail.original_name }}</span>
                 </div>
                 <div class="flex" style="justify-content:space-between;margin-bottom:7px">
                   <span class="small muted">نوع</span>

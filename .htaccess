@@ -1,0 +1,73 @@
+# ═══════════════════════════════════════════════════════════
+#  فرد سی‌ام‌اس — تنظیمات آپاچی
+# ═══════════════════════════════════════════════════════════
+
+# ─── نشانی‌های تمیز ─────────────────────────────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # اگر سایت در زیرشاخه نصب شده، مسیر آن را اینجا تنظیم کنید
+    # RewriteBase /
+
+    # فایل‌ها و پوشه‌های واقعی مستقیماً ارائه می‌شوند
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # پنل مدیریت و نقاط پایانی API از مسیریاب عبور نمی‌کنند
+    RewriteRule ^(admin|api|assets|themes|uploads)/ - [L]
+
+    # بقیه درخواست‌ها به کنترلر اصلی سپرده می‌شود
+    RewriteRule . index.php [L]
+</IfModule>
+
+# ─── هدرهای امنیتی ─────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    Header always unset X-Powered-By
+
+    # این هدر فقط روی HTTPS معنا دارد؛ در صورت داشتن گواهی SSL فعال کنید
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# ─── محافظت از فایل‌های حساس ───────────────────────────────
+<FilesMatch "^(config\.php|config\.local\.php|\.htaccess|\.gitignore|composer\.json|package\.json)$">
+    Require all denied
+</FilesMatch>
+
+# پوشه‌های داخلی نباید از بیرون خوانده شوند
+RedirectMatch 403 ^/(storage|includes|templates|tests)/
+
+# ─── فشرده‌سازی ────────────────────────────────────────────
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE application/rss+xml image/svg+xml
+</IfModule>
+
+# ─── کش مرورگر ─────────────────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    ExpiresByType text/css                  "access plus 1 month"
+    ExpiresByType application/javascript    "access plus 1 month"
+    ExpiresByType image/jpeg                "access plus 1 year"
+    ExpiresByType image/png                 "access plus 1 year"
+    ExpiresByType image/webp                "access plus 1 year"
+    ExpiresByType image/gif                 "access plus 1 year"
+    ExpiresByType image/svg+xml             "access plus 1 year"
+    ExpiresByType font/woff2                "access plus 1 year"
+
+    # صفحه‌های HTML همیشه تازه خوانده می‌شوند
+    ExpiresByType text/html                 "access plus 0 seconds"
+</IfModule>
+
+# ─── صفحه‌های خطا ──────────────────────────────────────────
+ErrorDocument 403 /index.php
+ErrorDocument 404 /index.php
+
+# ─── جلوگیری از فهرست شدن محتوای پوشه‌ها ───────────────────
+Options -Indexes

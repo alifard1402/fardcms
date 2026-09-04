@@ -26,6 +26,31 @@ function pickAllowed(mixed $value, array $allowed, string $default): string
 }
 
 /**
+ * ساخت شرط جستجوی LIKE روی چند ستون
+ *
+ * هر ستون یک placeholder یکتا می‌گیرد. این نکته حیاتی است: چون اتصال با
+ * PDO::ATTR_EMULATE_PREPARES = false کار می‌کند، یک placeholder نام‌دار را
+ * نمی‌توان چند بار در یک کوئری تکرار کرد و در غیر این صورت خطای
+ * «Invalid parameter number» رخ می‌دهد.
+ *
+ * @param string[]             $columns نام ستون‌ها (مقدار ثابت کد، نه ورودی کاربر)
+ * @param string               $term    عبارت جستجو
+ * @param array<string, mixed> $params  آرایه پارامترها که پر می‌شود
+ */
+function likeCondition(array $columns, string $term, array &$params, string $prefix = 'search'): string
+{
+    $parts = [];
+
+    foreach (array_values($columns) as $i => $column) {
+        $key = $prefix . '_' . $i;
+        $parts[] = "$column LIKE :$key";
+        $params[$key] = '%' . $term . '%';
+    }
+
+    return '(' . implode(' OR ', $parts) . ')';
+}
+
+/**
  * ساخت نامک (slug) از یک عنوان — با پشتیبانی کامل از فارسی
  */
 function slugify(string $text): string
@@ -135,9 +160,14 @@ function sanitizeHtml(string $html): string
 /**
  * تبدیل تاریخ میلادی به شمسی
  *
+ * ارقام خروجی فارسی است تا با بقیه اعداد نمایشی سایت (بازدید، تعداد
+ * دیدگاه و ...) هم‌خوانی داشته باشد. برای تاریخ ماشین‌خوان در ویژگی
+ * datetime باید از date('c', ...) استفاده شود، نه این تابع.
+ *
  * @param string $format الگوی خروجی: Y سال، m ماه، d روز، H ساعت، i دقیقه، F نام ماه
+ * @param bool   $persianDigits اگر false باشد، ارقام لاتین برگردانده می‌شود
  */
-function jalaliDate(string $format, ?string $datetime = null): string
+function jalaliDate(string $format, ?string $datetime = null, bool $persianDigits = true): string
 {
     $timestamp = $datetime !== null ? strtotime($datetime) : time();
 
@@ -164,7 +194,9 @@ function jalaliDate(string $format, ?string $datetime = null): string
         's' => date('s', $timestamp),
     ];
 
-    return strtr($format, array_map('strval', $replacements));
+    $result = strtr($format, array_map('strval', $replacements));
+
+    return $persianDigits ? toPersianDigits($result) : $result;
 }
 
 /**
@@ -280,11 +312,39 @@ function formatBytes(int $bytes, int $precision = 1): string
 }
 
 /**
- * ساخت آدرس کامل برای یک مسیر نسبی
+ * ساخت آدرس مطلق برای یک مسیر نسبی
+ *
+ * از ثابت SITE_URL استفاده می‌کند، نه از هدر Host درخواست. این عمدی است:
+ * نشانی مطلق در ایمیل بازیابی رمز، canonical و خوراک RSS به کار می‌رود و
+ * اگر از Host خوانده شود، مهاجم می‌تواند با جعل آن لینک بازیابی را به
+ * دامنه خودش هدایت کند (Host header injection).
  */
 function siteUrl(string $path = ''): string
 {
     return rtrim(SITE_URL, '/') . '/' . ltrim($path, '/');
+}
+
+/**
+ * مسیر ریشه‌نسبی برای فایل‌های ثابت و نقاط پایانی API
+ *
+ * بر خلاف siteUrl()، این تابع نام میزبان را وارد آدرس نمی‌کند. برای
+ * CSS، جاوااسکریپت، قلم و درخواست‌های fetch باید همین استفاده شود: اگر
+ * سایت با نام میزبان دیگری باز شود (IP، دامنه دوم، پشت پروکسی یا در
+ * محیط توسعه)، نشانی مطلق آن فایل‌ها را cross-origin می‌کند و مرورگر
+ * بارگذاری قلم و درخواست‌های same-origin را مسدود می‌کند.
+ */
+function assetUrl(string $path = ''): string
+{
+    static $base = null;
+
+    if ($base === null) {
+        // ریشه سایت از مسیر اسکریپت اجراشده استخراج می‌شود تا نصب در
+        // زیرشاخه (مثلاً /blog) هم درست کار کند
+        $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+        $base = ($dir === '/' || $dir === '.' || $dir === '') ? '' : rtrim($dir, '/');
+    }
+
+    return $base . '/' . ltrim($path, '/');
 }
 
 /**

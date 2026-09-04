@@ -159,8 +159,11 @@ function getComments(array $args = []): array
     }
 
     if (!empty($args['search'])) {
-        $conditions[] = '(c.content LIKE :search OR c.author_name LIKE :search OR c.author_email LIKE :search)';
-        $params['search'] = '%' . trim((string) $args['search']) . '%';
+        $conditions[] = likeCondition(
+            ['c.content', 'c.author_name', 'c.author_email'],
+            trim((string) $args['search']),
+            $params
+        );
     }
 
     $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';

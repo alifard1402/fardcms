@@ -26,7 +26,11 @@ class Database
                 ]);
             } catch (PDOException $e) {
                 error_log('Database connection failed: ' . $e->getMessage());
-                throw new RuntimeException('خطا در اتصال به دیتابیس');
+
+                // خطای اصلی به عنوان previous حمل می‌شود تا installState()
+                // بتواند «دیتابیس ساخته نشده» را از «سرور در دسترس نیست»
+                // تشخیص دهد، بدون آنکه جزئیات اتصال در پیام بیرونی درز کند
+                throw new RuntimeException('خطا در اتصال به دیتابیس', 0, $e);
             }
         }
 
@@ -53,17 +57,55 @@ class Database
     }
 
     /**
-     * آیا دیتابیس نصب شده است؟ (برای هدایت به نصب‌کننده)
+     * وضعیت نصب سایت
+     *
+     * «نصب نشده» و «دیتابیس در دسترس نیست» دو حالت کاملاً متفاوت‌اند:
+     * قطعی موقت دیتابیس نباید بازدیدکننده را به نصب‌کننده بفرستد، چون
+     * هم گمراه‌کننده است و هم می‌تواند به سوءاستفاده منجر شود.
+     *
+     * @return 'installed'|'not_installed'|'unavailable'
      */
-    public static function isInstalled(): bool
+    public static function installState(): string
     {
         try {
             $db = self::getConnection();
-            $db->query('SELECT 1 FROM ' . tbl('options') . ' LIMIT 1');
-            return true;
         } catch (Throwable $e) {
-            return false;
+            // به سرور دیتابیس نمی‌توان وصل شد یا خود دیتابیس وجود ندارد
+            return self::databaseMissing($e) ? 'not_installed' : 'unavailable';
         }
+
+        try {
+            $db->query('SELECT 1 FROM ' . tbl('options') . ' LIMIT 1');
+
+            return 'installed';
+        } catch (PDOException $e) {
+            // 42S02 = جدول وجود ندارد؛ یعنی سایت هنوز نصب نشده است
+            return ($e->getCode() === '42S02') ? 'not_installed' : 'unavailable';
+        } catch (Throwable $e) {
+            return 'unavailable';
+        }
+    }
+
+    /**
+     * آیا خطای اتصال به خاطر نبودِ خود دیتابیس است؟
+     *
+     * کد ۱۰۴۹ یعنی سرور در دسترس است اما دیتابیس ساخته نشده — این حالت
+     * «نصب نشده» است، نه قطعی سرور. خطای اصلی PDO در previous قرار دارد.
+     */
+    private static function databaseMissing(Throwable $e): bool
+    {
+        $cause = $e->getPrevious() ?? $e;
+
+        return str_contains($cause->getMessage(), '1049')
+            || str_contains($cause->getMessage(), 'Unknown database');
+    }
+
+    /**
+     * آیا سایت نصب شده است؟
+     */
+    public static function isInstalled(): bool
+    {
+        return self::installState() === 'installed';
     }
 
     // جلوگیری از clone و unserialize

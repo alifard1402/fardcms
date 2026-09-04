@@ -138,7 +138,7 @@ export const SettingsView = {
               <div class="field">
                 <label class="field-label">لوگوی سایت</label>
                 <div class="flex gap-sm">
-                  <input v-model="settings.site_logo" type="text" class="input input-ltr grow"
+                  <input v-model="settings.site_logo" type="text" class="input input-auto grow"
                          placeholder="آدرس تصویر لوگو">
                   <button class="btn btn-secondary" @click="picker = 'site_logo'">
                     <Icon name="image" :size="16" />
@@ -151,7 +151,7 @@ export const SettingsView = {
               <div class="field">
                 <label class="field-label">نمادک سایت (favicon)</label>
                 <div class="flex gap-sm">
-                  <input v-model="settings.site_favicon" type="text" class="input input-ltr grow"
+                  <input v-model="settings.site_favicon" type="text" class="input input-auto grow"
                          placeholder="آدرس تصویر نمادک">
                   <button class="btn btn-secondary" @click="picker = 'site_favicon'">
                     <Icon name="image" :size="16" />
@@ -268,7 +268,7 @@ export const SettingsView = {
             <div class="field mb-0">
               <label class="field-label">تصویر پیش‌فرض اشتراک‌گذاری</label>
               <div class="flex gap-sm">
-                <input v-model="settings.seo_meta_image" type="text" class="input input-ltr grow"
+                <input v-model="settings.seo_meta_image" type="text" class="input input-auto grow"
                        placeholder="آدرس تصویر">
                 <button class="btn btn-secondary" @click="picker = 'seo_meta_image'">
                   <Icon name="image" :size="16" />

@@ -75,3 +75,4 @@ require_once INCLUDES_PATH . '/taxonomy.php';
 require_once INCLUDES_PATH . '/media.php';
 require_once INCLUDES_PATH . '/comments.php';
 require_once INCLUDES_PATH . '/menus.php';
+require_once INCLUDES_PATH . '/theme.php';

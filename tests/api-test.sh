@@ -70,6 +70,16 @@ chk "trash post" 'زباله‌دان' "$r"
 r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" -d "{\"id\":$PID,\"action\":\"restore\"}" "$B/api/posts/delete.php")
 chk "restore post" 'بازگردانی' "$r"
 
+echo "=== search (placeholder reuse regression) ==="
+r=$(curl -s -b $J "$B/api/posts/index.php?type=post&status=any&search=%D9%81%D8%B1%D8%AF")
+chk "posts search works" '"success":true' "$r"
+r=$(curl -s -b $J "$B/api/users/index.php?search=admin")
+chk "users search works" '"success":true' "$r"
+r=$(curl -s -b $J "$B/api/comments/index.php?search=x")
+chk "comments search works" '"success":true' "$r"
+r=$(curl -s -b $J "$B/api/media/index.php?search=x")
+chk "media search works" '"success":true' "$r"
+
 echo "=== terms ==="
 r=$(curl -s -b $J "$B/api/terms/index.php?taxonomy=category")
 chk "terms list" '"tree"' "$r"

@@ -169,8 +169,11 @@ function getMediaList(array $args = []): array
     $params = [];
 
     if (!empty($args['search'])) {
-        $conditions[] = '(m.original_name LIKE :search OR m.alt_text LIKE :search)';
-        $params['search'] = '%' . trim((string) $args['search']) . '%';
+        $conditions[] = likeCondition(
+            ['m.original_name', 'm.alt_text'],
+            trim((string) $args['search']),
+            $params
+        );
     }
 
     // فیلتر بر اساس نوع کلی فایل (تصویر، ویدیو، سند)

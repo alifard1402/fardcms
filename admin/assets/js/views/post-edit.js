@@ -287,10 +287,10 @@ export const PostEditView = {
 
                 <div class="field mb-0">
                   <label class="field-label">نامک (بخش آدرس)</label>
-                  <input v-model="form.slug" type="text" class="input input-ltr"
+                  <input v-model="form.slug" type="text" class="input input-auto"
                          placeholder="my-post-slug" @input="slugEdited = true">
                   <div class="field-hint" v-if="publicUrl">
-                    آدرس نهایی: <span class="mono">{{ publicUrl }}</span>
+                    آدرس نهایی: <span class="slug-text">{{ publicUrl }}</span>
                   </div>
                 </div>
               </div>

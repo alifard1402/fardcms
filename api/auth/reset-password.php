@@ -33,4 +33,4 @@ markResetTokenUsed($token);
 
 logActivity('password_reset', 'user', $userId, 'تغییر رمز عبور با لینک بازیابی');
 
-jsonSuccess(['redirect' => siteUrl('login.html')], 'رمز عبور شما با موفقیت تغییر کرد');
+jsonSuccess(['redirect' => 'login.html?reset=1'], 'رمز عبور شما با موفقیت تغییر کرد');

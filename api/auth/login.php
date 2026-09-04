@@ -25,6 +25,9 @@ if (!$result['success']) {
 
 // توکن CSRF تازه برای درخواست‌های بعدی همین نشست
 $result['data']['csrf_token'] = generateCsrfToken();
-$result['data']['redirect'] = canAccessAdmin() ? siteUrl('admin/') : siteUrl('');
+
+// مسیر بازگشت نسبی است، نه بر پایه SITE_URL؛ در غیر این صورت اگر سایت
+// با نام میزبان دیگری باز شود، کوکی نشست به دامنه جدید فرستاده نمی‌شود
+$result['data']['redirect'] = canAccessAdmin() ? 'admin/' : './';
 
 jsonSuccess($result['data'], $result['message']);

@@ -13,4 +13,4 @@ if (isLoggedIn()) {
     authLogout();
 }
 
-jsonSuccess(['redirect' => siteUrl('login.html')], 'با موفقیت خارج شدید');
+jsonSuccess(['redirect' => 'login.html'], 'با موفقیت خارج شدید');

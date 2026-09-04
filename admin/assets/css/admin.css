@@ -468,6 +468,26 @@ svg { flex-shrink: 0; }
 }
 .input-ltr { direction: ltr; text-align: left; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; }
 
+/* فیلدهایی که می‌توانند هم متن فارسی و هم لاتین داشته باشند: نامک و آدرس فایل.
+   دو نکته اینجا مهم است:
+   ۱) unicode-bidi: plaintext جهت را از خود محتوا می‌گیرد، پس نامک فارسی
+      راست‌به‌چپ و نامک لاتین چپ‌به‌راست نمایش داده می‌شود.
+   ۲) قلم مونواسپیس عمداً استفاده نشده؛ این قلم‌ها شکل‌دهی (shaping) حروف
+      فارسی را پشتیبانی نمی‌کنند و حروف را جدا از هم و بریده نشان می‌دهند. */
+.input-auto {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: plaintext;
+  font-size: 13px;
+}
+
+/* همان منطق برای متن‌های نمایشی مانند نامک در جدول و پیش‌نمایش آدرس */
+.slug-text {
+  direction: ltr;
+  unicode-bidi: plaintext;
+  font-size: 12.5px;
+}
+
 .search-box { position: relative; flex: 1; min-width: 190px; max-width: 380px; }
 .search-box .input { padding-inline-start: 40px; }
 .search-box svg {
@@ -1203,7 +1223,13 @@ html[dir="rtl"] .menu-children { padding: 0 26px 7px 14px; }
 .grow { flex: 1; min-width: 0; }
 .hidden { display: none; }
 .divider { height: 1px; background: var(--border); margin: 18px 0; }
-.mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; direction: ltr; }
+.mono {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  direction: ltr;
+  /* جهت بر اساس محتوا تعیین می‌شود تا نامک و نام فایل فارسی درست دیده شود */
+  unicode-bidi: plaintext;
+}
 
 /* ─── واکنش‌گرایی ────────────────────────────────────────── */
 @media (max-width: 1100px) {

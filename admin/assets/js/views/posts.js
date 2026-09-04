@@ -289,7 +289,7 @@ export const PostsView = {
                          @click="navigate(labels.editBase + post.id)">{{ post.title }}</div>
                     <div class="cell-meta">
                       {{ post.comment_count > 0 ? fa(post.comment_count) + ' دیدگاه · ' : '' }}
-                      <span class="mono">{{ post.slug }}</span>
+                      <span class="slug-text">{{ post.slug }}</span>
                     </div>
                   </td>
                   <td class="nowrap muted small">{{ post.author_name || '—' }}</td>

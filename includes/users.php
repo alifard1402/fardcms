@@ -20,8 +20,11 @@ function getUsers(array $args = []): array
     $params = [];
 
     if (!empty($args['search'])) {
-        $conditions[] = '(u.name LIKE :search OR u.email LIKE :search OR u.username LIKE :search)';
-        $params['search'] = '%' . trim((string) $args['search']) . '%';
+        $conditions[] = likeCondition(
+            ['u.name', 'u.email', 'u.username'],
+            trim((string) $args['search']),
+            $params
+        );
     }
 
     if (!empty($args['role']) && isValidRole((string) $args['role'])) {

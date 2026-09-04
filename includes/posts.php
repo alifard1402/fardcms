@@ -83,8 +83,7 @@ function getPosts(array $args = []): array
     }
 
     if ($search !== '') {
-        $conditions[] = '(p.title LIKE :search OR p.content LIKE :search OR p.excerpt LIKE :search)';
-        $params['search'] = '%' . $search . '%';
+        $conditions[] = likeCondition(['p.title', 'p.content', 'p.excerpt'], $search, $params);
     }
 
     // پیوند با دسته‌بندی یا برچسب
