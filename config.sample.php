@@ -1,25 +1,37 @@
 <?php
 /**
- * تنظیمات اصلی FardCMS
- * این فایل را مطابق محیط خود ویرایش کنید
+ * تنظیمات اصلی FardCMS — نمونه
+ *
+ * ┌───────────────────────────────────────────────────────────┐
+ * │  این فایل را به config.php تغییر نام دهید و چهار مقدار    │
+ * │  دیتابیس پایین را پر کنید.                                 │
+ * │                                                            │
+ * │  اگر قبلاً نصب کرده‌اید و config.php دارید، به این فایل     │
+ * │  کاری نداشته باشید؛ فقط در config.php خودتان مقدار         │
+ * │  SITE_URL را بررسی کنید.                                   │
+ * └───────────────────────────────────────────────────────────┘
  */
 
 // ─── تنظیمات دیتابیس ───────────────────────────────────────
 define('DB_HOST', getenv('FARDCMS_DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('FARDCMS_DB_NAME') ?: 'fardcms');
-define('DB_USER', getenv('FARDCMS_DB_USER') ?: 'root');
-define('DB_PASS', getenv('FARDCMS_DB_PASS') ?: '');
+define('DB_NAME', getenv('FARDCMS_DB_NAME') ?: 'نام_دیتابیس_شما');
+define('DB_USER', getenv('FARDCMS_DB_USER') ?: 'کاربر_دیتابیس_شما');
+define('DB_PASS', getenv('FARDCMS_DB_PASS') ?: 'رمز_دیتابیس_شما');
 define('DB_CHARSET', 'utf8mb4');
 define('DB_PREFIX', 'fc_');
 
 // ─── تنظیمات سایت ──────────────────────────────────────────
 define('SITE_NAME', 'فرد سی‌ام‌اس');
-define('SITE_URL', getenv('FARDCMS_URL') ?: 'http://localhost:8765');
+// آدرس کامل سایت، بدون اسلش پایانی. اگر در زیرشاخه نصب شده،
+// نام زیرشاخه هم باید در آن باشد.
+define('SITE_URL', getenv('FARDCMS_URL') ?: 'https://vfard.ir/fardcms');
 define('SITE_LANG', 'fa');
 
 // ─── کلید امنیتی ───────────────────────────────────────────
 // یک رشته تصادفی قوی برای رمزنگاری توکن‌ها
-define('SECRET_KEY', getenv('FARDCMS_SECRET') ?: 'change-this-to-a-random-secure-string-in-production');
+// این مقدار را با یک رشته تصادفی طولانی عوض کنید (هر چیزی، مثلاً ۶۰ کاراکتر
+// حروف و عدد بی‌معنی). برای امضای توکن‌های امنیتی استفاده می‌شود.
+define('SECRET_KEY', getenv('FARDCMS_SECRET') ?: 'این-رشته-را-عوض-کنید-یک-متن-تصادفی-طولانی-بگذارید');
 
 // ─── تنظیمات Session ───────────────────────────────────────
 define('SESSION_LIFETIME', 7200);       // ۲ ساعت (ثانیه)

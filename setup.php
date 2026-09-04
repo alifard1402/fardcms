@@ -20,7 +20,9 @@ $isCli = PHP_SAPI === 'cli';
 $cliArgs = [];
 if ($isCli) {
     foreach (array_slice($argv, 1) as $arg) {
-        if (preg_match('/^--([a-z-]+)(?:=(.*))?$/', $arg, $m)) {
+        // آندرلاین هم باید پذیرفته شود، وگرنه گزینه‌هایی مثل --site_title
+        // بی‌صدا نادیده گرفته می‌شوند
+        if (preg_match('/^--([a-z][a-z0-9_-]*)(?:=(.*))?$/', $arg, $m)) {
             $cliArgs[$m[1]] = $m[2] ?? '1';
         }
     }
@@ -269,7 +271,7 @@ function runInstall(
     // ─── ثبت قفل نصب ───────────────────────────────────────
     @file_put_contents(LOCK_FILE, json_encode([
         'installed_at' => date('c'),
-        'version'      => '1.0.0',
+        'version'      => FARDCMS_VERSION,
         'db_name'      => DB_NAME,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 

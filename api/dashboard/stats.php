@@ -83,7 +83,7 @@ $response = [
     'chart'   => $chart,
     'system'  => [
         'php_version'  => PHP_VERSION,
-        'cms_version'  => '1.0.0',
+        'cms_version'  => FARDCMS_VERSION,
         'active_theme' => (string) getOption('active_theme', 'default'),
         'site_url'     => siteUrl(''),
     ],
