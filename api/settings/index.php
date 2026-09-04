@@ -85,9 +85,9 @@ function sanitizeSettingValue(string $name, mixed $value, mixed $default): mixed
         return (isValidRole($text) && $text !== 'administrator') ? $text : 'subscriber';
     }
 
-    // متن پاورقی می‌تواند HTML محدود داشته باشد
+    // متن پاورقی فقط HTML درون‌خطی محدود می‌پذیرد (پیوند و تأکید)
     if ($name === 'footer_text') {
-        return mb_substr(sanitizeHtml($text), 0, 1000, 'UTF-8');
+        return mb_substr(sanitizeInlineHtml($text), 0, 1000, 'UTF-8');
     }
 
     // کد رهگیری فقط شناسه، نه اسکریپت

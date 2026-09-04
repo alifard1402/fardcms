@@ -100,6 +100,35 @@ CID=$(echo "$r" | python3 -c 'import sys,json;print(json.load(sys.stdin)["data"]
 r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" -d "{\"id\":$CID,\"action\":\"approve\"}" "$B/api/comments/moderate.php")
 chk "approve comment" 'به‌روزرسانی شد' "$r"
 
+echo "=== آپلود: بررسی نوع واقعی فایل ==="
+UP=$(mktemp -d)
+php -r '$im=imagecreatetruecolor(60,40); imagefill($im,0,0,imagecolorallocate($im,120,80,255)); imagepng($im,"'$UP'/ok.png");'
+printf '<?php system($_GET["c"]); ?>' > $UP/evil.png
+printf '\xff\xd8\xff\xe0<?php system($_GET["c"]); ?>' > $UP/poly.jpg
+printf 'GIF89a<?php system($_GET["c"]); ?>' > $UP/poly.gif
+printf '<?php echo 1; ?>' > $UP/shell.php
+printf '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect width="9" height="9"/></svg>' > $UP/s.svg
+
+r=$(curl -s -b $J -H "X-CSRF-Token: $CSRF" -F "file[]=@$UP/ok.png" "$B/api/media/upload.php")
+chk "تصویر معتبر پذیرفته می‌شود" '"success":true' "$r"
+r=$(curl -s -b $J -H "X-CSRF-Token: $CSRF" -F "file[]=@$UP/evil.png" "$B/api/media/upload.php")
+chk "php با پسوند png رد می‌شود" '"success":false' "$r"
+r=$(curl -s -b $J -H "X-CSRF-Token: $CSRF" -F "file[]=@$UP/poly.jpg" "$B/api/media/upload.php")
+chk "polyglot jpeg رد می‌شود" '"success":false' "$r"
+r=$(curl -s -b $J -H "X-CSRF-Token: $CSRF" -F "file[]=@$UP/poly.gif" "$B/api/media/upload.php")
+chk "polyglot gif رد می‌شود" '"success":false' "$r"
+r=$(curl -s -b $J -H "X-CSRF-Token: $CSRF" -F "file[]=@$UP/shell.php" "$B/api/media/upload.php")
+chk "پسوند php رد می‌شود" '"success":false' "$r"
+r=$(curl -s -b $J -H "X-CSRF-Token: $CSRF" -F "file[]=@$UP/s.svg" "$B/api/media/upload.php")
+chk "svg پذیرفته می‌شود" '"success":true' "$r"
+SVGURL=$(echo "$r" | python3 -c 'import sys,json;print(json.load(sys.stdin)["data"]["media"][0]["url"])' 2>/dev/null)
+if [ -n "$SVGURL" ]; then
+  body=$(curl -s "$SVGURL")
+  echo "$body" | grep -q "<script" && { echo "  FAIL  اسکریپت svg حذف نشد"; fail=$((fail+1)); } \
+    || { echo "  PASS  اسکریپت svg حذف شد"; pass=$((pass+1)); }
+fi
+rm -rf $UP
+
 echo "=== users ==="
 r=$(curl -s -b $J "$B/api/users/index.php")
 chk "users list" '"users"' "$r"

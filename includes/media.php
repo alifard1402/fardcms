@@ -70,6 +70,32 @@ function uploadMedia(array $file): array
         return ['success' => false, 'message' => 'محتوای فایل با پسوند آن هم‌خوانی ندارد'];
     }
 
+    // پسوندهای تصویری باید واقعاً تصویر باشند
+    //
+    // بررسی finfo تنها به چند بایت ابتدایی فایل نگاه می‌کند، پس فایلی که
+    // با هدر جعلی JPEG شروع شود و بعد کد PHP داشته باشد از آن رد می‌شود.
+    // getimagesize() تصویر را واقعاً تجزیه می‌کند و چنین فایلی را رد می‌کند.
+    $rasterExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+    if (in_array($extension, $rasterExtensions, true)) {
+        $imageInfo = @getimagesize($file['tmp_name']);
+
+        if ($imageInfo === false) {
+            return ['success' => false, 'message' => 'این فایل یک تصویر معتبر نیست'];
+        }
+
+        // نوع اعلام‌شده توسط finfo و نوع واقعی تصویر باید یکی باشند
+        if (($imageInfo['mime'] ?? '') !== $realMime) {
+            return ['success' => false, 'message' => 'نوع واقعی تصویر با پسوند آن هم‌خوانی ندارد'];
+        }
+
+        // ابعاد غیرمنطقی نشانه فایل دستکاری‌شده یا حمله decompression است
+        if ($imageInfo[0] < 1 || $imageInfo[1] < 1
+            || $imageInfo[0] > 20000 || $imageInfo[1] > 20000) {
+            return ['success' => false, 'message' => 'ابعاد تصویر خارج از محدوده مجاز است'];
+        }
+    }
+
     // فایل SVG می‌تواند شامل اسکریپت باشد و باید پاک‌سازی شود
     $svgContent = null;
     if ($extension === 'svg') {

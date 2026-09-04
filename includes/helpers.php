@@ -136,26 +136,12 @@ function makeExcerpt(string $content, int $length = 160): string
     return rtrim(mb_substr($text, 0, $length, 'UTF-8'), ' ،.') . '…';
 }
 
-/**
- * پاک‌سازی HTML ورودی کاربر — حذف تگ‌ها و ویژگی‌های خطرناک
- *
- * کاربران با دسترسی انتشار می‌توانند HTML محدود بنویسند، اما اسکریپت،
- * iframe و رویدادهای on* حذف می‌شوند تا از XSS ذخیره‌شده جلوگیری شود.
+/*
+ * تابع sanitizeHtml() در includes/sanitizer.php تعریف شده است.
+ * پیاده‌سازی قبلی بر پایه عبارت باقاعده بود و با نمونه‌هایی مانند
+ * <svg/onload=…> یا href="java&#115;cript:…" دور زده می‌شد؛ نسخه فعلی
+ * سند را با DOM تجزیه می‌کند و فهرست سفید اعمال می‌کند.
  */
-function sanitizeHtml(string $html): string
-{
-    // حذف کامل تگ‌های خطرناک همراه با محتوایشان
-    $html = preg_replace('#<\s*(script|style|iframe|object|embed|form|base|link|meta)\b[^>]*>.*?<\s*/\s*\1\s*>#is', '', $html);
-    $html = preg_replace('#<\s*(script|style|iframe|object|embed|form|base|link|meta)\b[^>]*/?>#i', '', $html);
-
-    // حذف ویژگی‌های رویداد (onclick، onerror و ...)
-    $html = preg_replace('/\son[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
-
-    // حذف پروتکل‌های اجرایی در href/src
-    $html = preg_replace('/\s(href|src|xlink:href)\s*=\s*("|\')\s*(javascript|vbscript|data\s*:\s*text\/html)[^"\']*\2/i', '', $html);
-
-    return trim($html);
-}
 
 /**
  * تبدیل تاریخ میلادی به شمسی
