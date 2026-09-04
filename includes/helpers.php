@@ -12,6 +12,20 @@ function e(?string $value): string
 }
 
 /**
+ * انتخاب یک مقدار از فهرست مجاز
+ *
+ * اگر مقدار ورودی در فهرست مجاز نباشد (یا وجود نداشته باشد)، مقدار
+ * پیش‌فرض بازگردانده می‌شود. برای پاک‌سازی ورودی‌هایی مانند نوع محتوا،
+ * وضعیت و ترتیب که مستقیماً در کوئری استفاده می‌شوند.
+ *
+ * @param string[] $allowed
+ */
+function pickAllowed(mixed $value, array $allowed, string $default): string
+{
+    return is_string($value) && in_array($value, $allowed, true) ? $value : $default;
+}
+
+/**
  * ساخت نامک (slug) از یک عنوان — با پشتیبانی کامل از فارسی
  */
 function slugify(string $text): string

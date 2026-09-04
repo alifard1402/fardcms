@@ -99,7 +99,7 @@ function saveTerm(array $data, ?int $id = null): array
     $db = Database::getConnection();
 
     $name = trim((string) ($data['name'] ?? ''));
-    $taxonomy = in_array($data['taxonomy'] ?? 'category', TAXONOMIES, true) ? $data['taxonomy'] : 'category';
+    $taxonomy = pickAllowed($data['taxonomy'] ?? null, TAXONOMIES, 'category');
 
     if ($name === '') {
         return ['success' => false, 'message' => 'نام نمی‌تواند خالی باشد'];

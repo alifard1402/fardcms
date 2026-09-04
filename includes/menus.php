@@ -177,9 +177,11 @@ function replaceMenuItems(int $menuId, array $items): array
                     continue;
                 }
 
-                $type = in_array($node['type'] ?? 'custom', ['custom', 'post', 'page', 'category', 'tag'], true)
-                    ? $node['type']
-                    : 'custom';
+                $type = pickAllowed(
+                    $node['type'] ?? null,
+                    ['custom', 'post', 'page', 'category', 'tag'],
+                    'custom'
+                );
 
                 $stmt->execute([
                     $menuId,

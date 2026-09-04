@@ -37,7 +37,7 @@ function getPosts(array $args = []): array
 {
     $db = Database::getConnection();
 
-    $type     = in_array($args['type'] ?? 'post', POST_TYPES, true) ? $args['type'] ?? 'post' : 'post';
+    $type     = pickAllowed($args['type'] ?? null, POST_TYPES, 'post');
     $page     = max(1, (int) ($args['page'] ?? 1));
     $perPage  = min(100, max(1, (int) ($args['per_page'] ?? 10)));
     $offset   = ($page - 1) * $perPage;
@@ -221,8 +221,8 @@ function savePost(array $data, ?int $id = null): array
 
     $title = trim((string) ($data['title'] ?? ''));
     $content = (string) ($data['content'] ?? '');
-    $type = in_array($data['type'] ?? 'post', POST_TYPES, true) ? $data['type'] : 'post';
-    $status = in_array($data['status'] ?? 'draft', POST_STATUSES, true) ? $data['status'] : 'draft';
+    $type = pickAllowed($data['type'] ?? null, POST_TYPES, 'post');
+    $status = pickAllowed($data['status'] ?? null, POST_STATUSES, 'draft');
 
     if ($title === '') {
         return ['success' => false, 'message' => 'عنوان نمی‌تواند خالی باشد'];

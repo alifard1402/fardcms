@@ -136,10 +136,13 @@ function isApiRequest(): bool
 
 /**
  * محدودیت نرخ درخواست برای API
+ *
+ * هر $scope سطل شمارش مستقل خود را دارد؛ بنابراین محدودیت سخت‌گیرانه یک
+ * نقطه پایانی (مثلاً ارسال دیدگاه) با محدودیت عمومی درخواست‌ها قاطی نمی‌شود.
  */
-function apiRateLimit(int $maxRequests = 240, int $window = 60): void
+function apiRateLimit(int $maxRequests = 240, int $window = 60, string $scope = 'global'): void
 {
-    $key = hash('sha256', getClientIp() . '|' . currentUserId() . SECRET_KEY);
+    $key = hash('sha256', $scope . '|' . getClientIp() . '|' . currentUserId() . SECRET_KEY);
     $file = sys_get_temp_dir() . '/fardcms_api_rl_' . $key . '.json';
 
     $timestamps = file_exists($file)
