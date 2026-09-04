@@ -1,0 +1,17 @@
+# فایل‌های آپلودشده کاربران
+/uploads/*
+!/uploads/.gitkeep
+
+# فایل‌های موقت و قفل نصب
+/storage/*
+!/storage/.gitkeep
+
+# تنظیمات محلی
+/config.local.php
+
+# سیستم‌عامل و ویرایشگر
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
