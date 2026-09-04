@@ -80,6 +80,25 @@ chk "comments search works" '"success":true' "$r"
 r=$(curl -s -b $J "$B/api/media/index.php?search=x")
 chk "media search works" '"success":true' "$r"
 
+echo "=== عملیات گروهی: فیلدهای برگه حفظ می‌شوند ==="
+r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" \
+  -d '{"title":"والد آزمایشی","content":"<p>x</p>","type":"page","status":"publish"}' "$B/api/posts/save.php")
+PARENT=$(echo "$r" | python3 -c 'import sys,json;print(json.load(sys.stdin)["data"]["post"]["id"])')
+r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" \
+  -d "{\"title\":\"فرزند آزمایشی\",\"content\":\"<p>y</p>\",\"type\":\"page\",\"status\":\"draft\",\"parent_id\":$PARENT,\"menu_order\":7,\"template\":\"wide\"}" \
+  "$B/api/posts/save.php")
+CHILD=$(echo "$r" | python3 -c 'import sys,json;print(json.load(sys.stdin)["data"]["post"]["id"])')
+r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" \
+  -d "{\"ids\":[$CHILD],\"action\":\"publish\"}" "$B/api/posts/bulk.php")
+chk "انتشار گروهی انجام شد" '"affected":1' "$r"
+r=$(curl -s -b $J "$B/api/posts/show.php?id=$CHILD")
+chk "برگه والد حفظ شد" "\"parent_id\":$PARENT" "$r"
+chk "ترتیب نمایش حفظ شد" '"menu_order":7' "$r"
+chk "قالب اختصاصی حفظ شد" '"template":"wide"' "$r"
+chk "وضعیت منتشر شد" '"status":"publish"' "$r"
+curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" -d "{\"id\":$CHILD,\"action\":\"force\"}" "$B/api/posts/delete.php" > /dev/null
+curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" -d "{\"id\":$PARENT,\"action\":\"force\"}" "$B/api/posts/delete.php" > /dev/null
+
 echo "=== terms ==="
 r=$(curl -s -b $J "$B/api/terms/index.php?taxonomy=category")
 chk "terms list" '"tree"' "$r"

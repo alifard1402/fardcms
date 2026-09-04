@@ -116,6 +116,11 @@ switch ($route) {
         showSitemap();
         break;
 
+    // ─── robots.txt ────────────────────────────────────────
+    case 'robots.txt':
+        showRobots();
+        break;
+
     // ─── در غیر این صورت: یک برگه با این نامک ──────────────
     default:
         // مسیرهای تودرتوی برگه‌ها با آخرین بخش آدرس تطبیق داده می‌شوند
@@ -476,6 +481,35 @@ function showSitemap(): void
     }
 
     echo '</urlset>';
+    exit;
+}
+
+/**
+ * تولید robots.txt
+ *
+ * به‌صورت پویا ساخته می‌شود چون استاندارد robots.txt برای دستور Sitemap
+ * آدرس مطلق می‌خواهد و آدرس سایت از تنظیمات می‌آید. در حالت تعمیر و
+ * نگهداری هم خزیدن موتورهای جستجو متوقف می‌شود.
+ */
+function showRobots(): void
+{
+    header('Content-Type: text/plain; charset=utf-8');
+
+    if (getOption('maintenance_mode', false)) {
+        echo "User-agent: *\nDisallow: /\n";
+        exit;
+    }
+
+    echo "User-agent: *\n";
+    echo "Allow: /\n\n";
+    echo "# پنل مدیریت، نقاط پایانی API و صفحه‌های احراز هویت ایندکس نمی‌شوند\n";
+
+    foreach (['/admin/', '/api/', '/search', '/login.html', '/register.html',
+              '/forgot-password.html', '/reset-password.html', '/setup.php'] as $path) {
+        echo "Disallow: $path\n";
+    }
+
+    echo "\nSitemap: " . siteUrl('sitemap.xml') . "\n";
     exit;
 }
 

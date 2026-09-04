@@ -51,21 +51,14 @@ foreach ($ids as $id) {
         continue;
     }
 
+    // تغییر وضعیت از setPostStatus() انجام می‌شود تا فیلدهایی مانند
+    // برگه والد، ترتیب نمایش و قالب اختصاصی دست‌نخورده بمانند
     $done = match ($action) {
         'trash'   => trashPost($id),
         'restore' => restorePost($id),
         'force'   => deletePost($id),
-        'publish' => currentUserCan('publish_posts')
-            && savePost(['title' => $post['title'], 'content' => $post['content'],
-                         'excerpt' => $post['excerpt'], 'slug' => $post['slug'],
-                         'type' => $post['type'], 'status' => 'publish',
-                         'featured_image' => $post['featured_image'],
-                         'comment_status' => $post['comment_status'] === 'open'], $id)['success'],
-        'draft'   => savePost(['title' => $post['title'], 'content' => $post['content'],
-                         'excerpt' => $post['excerpt'], 'slug' => $post['slug'],
-                         'type' => $post['type'], 'status' => 'draft',
-                         'featured_image' => $post['featured_image'],
-                         'comment_status' => $post['comment_status'] === 'open'], $id)['success'],
+        'publish' => setPostStatus($id, 'publish')['success'],
+        'draft'   => setPostStatus($id, 'draft')['success'],
     };
 
     $done ? $affected++ : $skipped++;

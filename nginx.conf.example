@@ -70,5 +70,7 @@ server {
                application/json application/rss+xml image/svg+xml;
 
     location = /favicon.ico { log_not_found off; access_log off; }
-    location = /robots.txt  { log_not_found off; access_log off; }
+
+    # robots.txt به‌صورت پویا توسط index.php ساخته می‌شود (برای آدرس مطلق
+    # نقشه سایت)، پس نباید به فایل ثابت نگاشت شود.
 }

@@ -417,8 +417,10 @@ function seedInitialData(PDO $db, int $adminId): void
              VALUES (?, ?, ?, ?, ?, ?)'
         );
 
-        $itemStmt->execute([$menuId, 'خانه', siteUrl(''), 'custom', null, 0]);
-        $itemStmt->execute([$menuId, 'وبلاگ', siteUrl('blog'), 'custom', null, 1]);
+        // مسیر نسبی ذخیره می‌شود، نه siteUrl(): اگر بعداً دامنه سایت
+        // تغییر کند، پیوندهای فهرست نباید به دامنه قدیمی اشاره کنند
+        $itemStmt->execute([$menuId, 'خانه', '/', 'custom', null, 0]);
+        $itemStmt->execute([$menuId, 'وبلاگ', '/blog', 'custom', null, 1]);
 
         $order = 2;
         foreach (['about' => 'درباره ما', 'contact' => 'تماس با ما'] as $slug => $title) {

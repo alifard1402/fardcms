@@ -347,6 +347,54 @@ function savePost(array $data, ?int $id = null): array
 }
 
 /**
+ * تغییر وضعیت یک محتوا
+ *
+ * فقط وضعیت (و در اولین انتشار، زمان انتشار) را تغییر می‌دهد. عمداً از
+ * savePost() استفاده نمی‌شود: آن تابع تمام ستون‌ها را می‌نویسد و اگر
+ * فراخوان همه فیلدها را نفرستد، مقادیری مثل برگه والد، ترتیب نمایش و
+ * قالب اختصاصی پاک می‌شوند.
+ *
+ * @return array{success: bool, message: string}
+ */
+function setPostStatus(int $id, string $status): array
+{
+    if (!in_array($status, POST_STATUSES, true)) {
+        return ['success' => false, 'message' => 'وضعیت درخواستی نامعتبر است'];
+    }
+
+    if (in_array($status, ['publish', 'private'], true) && !currentUserCan('publish_posts')) {
+        return ['success' => false, 'message' => 'شما اجازه انتشار محتوا را ندارید'];
+    }
+
+    $db = Database::getConnection();
+
+    $stmt = $db->prepare('SELECT title, type, status, published_at FROM ' . tbl('posts') . ' WHERE id = ? LIMIT 1');
+    $stmt->execute([$id]);
+    $post = $stmt->fetch();
+
+    if (!$post) {
+        return ['success' => false, 'message' => 'محتوای مورد نظر یافت نشد'];
+    }
+
+    // اگر برای اولین بار منتشر می‌شود، زمان انتشار همین حالا ثبت می‌شود
+    if ($status === 'publish' && empty($post['published_at'])) {
+        $db->prepare('UPDATE ' . tbl('posts') . ' SET status = ?, published_at = NOW() WHERE id = ?')
+           ->execute([$status, $id]);
+    } else {
+        $db->prepare('UPDATE ' . tbl('posts') . ' SET status = ? WHERE id = ?')
+           ->execute([$status, $id]);
+    }
+
+    // تعداد نوشته‌های هر دسته به وضعیت انتشار وابسته است
+    recountAllTerms();
+
+    logActivity('status_post', $post['type'], $id,
+        'تغییر وضعیت به ' . (postStatusLabels()[$status] ?? $status) . ': ' . $post['title']);
+
+    return ['success' => true, 'message' => 'وضعیت محتوا تغییر کرد'];
+}
+
+/**
  * انتقال به زباله‌دان
  */
 function trashPost(int $id): bool
