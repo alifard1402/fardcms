@@ -1,0 +1,10 @@
+# این پوشه فقط برای استفاده داخلی است و نباید از وب خوانده شود.
+# محافظت اینجا تکرار شده تا در نصب زیرشاخه یا در صورت نادیده گرفته شدن
+# .htaccess ریشه، باز هم برجا بماند.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

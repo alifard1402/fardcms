@@ -30,7 +30,7 @@ $categories = getTerms('category', ['hide_empty' => true]);
     <div class="container">
       <div class="footer-grid">
         <div class="footer-about">
-          <a class="site-brand" href="<?= e(siteUrl('')) ?>">
+          <a class="site-brand" href="<?= e(routeUrl('')) ?>">
             <span class="brand-mark" aria-hidden="true">✦</span>
             <span class="brand-name"><?= e($settings['site_title']) ?></span>
           </a>
@@ -66,10 +66,10 @@ $categories = getTerms('category', ['hide_empty' => true]);
                 </li>
               <?php endforeach; ?>
             <?php else: ?>
-              <li><a href="<?= e(siteUrl('')) ?>">خانه</a></li>
-              <li><a href="<?= e(siteUrl('blog')) ?>">وبلاگ</a></li>
-              <li><a href="<?= e(siteUrl('feed')) ?>">خوراک RSS</a></li>
-              <li><a href="<?= e(siteUrl('sitemap.xml')) ?>">نقشه سایت</a></li>
+              <li><a href="<?= e(routeUrl('')) ?>">خانه</a></li>
+              <li><a href="<?= e(routeUrl('blog')) ?>">وبلاگ</a></li>
+              <li><a href="<?= e(routeUrl('feed')) ?>">خوراک RSS</a></li>
+              <li><a href="<?= e(routeUrl('sitemap.xml')) ?>">نقشه سایت</a></li>
             <?php endif; ?>
           </ul>
         </div>

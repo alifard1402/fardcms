@@ -288,16 +288,28 @@ function prepareDirectories(): void
     }
 
     // اجرای PHP در پوشه آپلود مسدود می‌شود
-    @file_put_contents(UPLOADS_PATH . '/.htaccess',
-        "# اجرای اسکریپت در پوشه آپلود مجاز نیست\n"
-        . "<FilesMatch \"\\.(php|phtml|php3|php4|php5|php7|phps|cgi|pl|py|sh)$\">\n"
-        . "    Require all denied\n"
-        . "</FilesMatch>\n"
-        . "php_flag engine off\n"
-    );
+    //
+    // فایل‌های محافظت همراه پروژه ارائه می‌شوند؛ اینجا فقط اگر وجود
+    // نداشته باشند ساخته می‌شوند تا نسخه کامل‌تر بازنویسی نشود.
+    if (!is_file(UPLOADS_PATH . '/.htaccess')) {
+        @file_put_contents(UPLOADS_PATH . '/.htaccess',
+            "# اجرای اسکریپت در پوشه آپلود مجاز نیست\n"
+            . "<FilesMatch \"\\.(php|phtml|php3|php4|php5|php7|phps|cgi|pl|py|sh)$\">\n"
+            . "    Require all denied\n"
+            . "</FilesMatch>\n"
+            . "php_flag engine off\n"
+        );
+    }
 
-    // پوشه storage نباید از بیرون قابل دسترسی باشد
-    @file_put_contents(STORAGE_PATH . '/.htaccess', "Require all denied\n");
+    // پوشه‌های داخلی نباید از بیرون قابل دسترسی باشند
+    foreach ([STORAGE_PATH, INCLUDES_PATH, TEMPLATES_PATH] as $private) {
+        if (is_dir($private) && !is_file($private . '/.htaccess')) {
+            @file_put_contents($private . '/.htaccess',
+                "<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n"
+                . "<IfModule !mod_authz_core.c>\n    Order allow,deny\n    Deny from all\n</IfModule>\n"
+            );
+        }
+    }
 }
 
 /**

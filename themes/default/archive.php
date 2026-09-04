@@ -53,7 +53,7 @@ $author = view('author');
       </div>
       <h2 class="empty-title">نوشته‌ای یافت نشد</h2>
       <p class="empty-text">در این بخش هنوز نوشته‌ای منتشر نشده است.</p>
-      <a class="btn btn-outline" href="<?= e(siteUrl('blog')) ?>">مشاهده همه نوشته‌ها</a>
+      <a class="btn btn-outline" href="<?= e(routeUrl('blog')) ?>">مشاهده همه نوشته‌ها</a>
     </div>
   <?php else: ?>
     <div class="post-grid">

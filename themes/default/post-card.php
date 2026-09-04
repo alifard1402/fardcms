@@ -17,7 +17,7 @@
     <?php if (!empty($post['categories'])): ?>
       <div class="post-card-terms">
         <?php foreach (array_slice($post['categories'], 0, 3) as $category): ?>
-          <a class="term-chip" href="<?= e(siteUrl('category/' . $category['slug'])) ?>">
+          <a class="term-chip" href="<?= e(routeUrl('category/' . $category['slug'])) ?>">
             <?= e($category['name']) ?>
           </a>
         <?php endforeach; ?>

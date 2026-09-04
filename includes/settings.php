@@ -100,6 +100,7 @@ function defaultOptions(): array
         'allow_comments'     => true,
         'moderate_comments'  => true,
         'active_theme'       => 'default',
+        'pretty_urls'        => true,
         'date_format'        => 'j F Y',
         'front_page'         => 'blog',   // blog یا شناسه یک برگه
         'social_links'       => ['telegram' => '', 'instagram' => '', 'x' => '', 'github' => ''],

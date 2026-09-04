@@ -1,10 +1,13 @@
 # فایل‌های آپلودشده کاربران
 /uploads/*
 !/uploads/.gitkeep
+!/uploads/.htaccess
 
 # فایل‌های موقت و قفل نصب
 /storage/*
 !/storage/.gitkeep
+# فایل محافظت پوشه باید همراه پروژه ارائه شود
+!/storage/.htaccess
 
 # تنظیمات محلی
 /config.local.php

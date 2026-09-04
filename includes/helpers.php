@@ -334,11 +334,63 @@ function assetUrl(string $path = ''): string
 }
 
 /**
+ * آیا نشانی‌های تمیز فعال است؟
+ *
+ * نشانی تمیز به mod_rewrite (یا معادل آن در nginx) نیاز دارد. روی
+ * بخشی از هاست‌های اشتراکی .htaccess نادیده گرفته می‌شود؛ در آن حالت
+ * این گزینه خاموش می‌شود و سایت با نشانی پرسمانی کار می‌کند.
+ */
+function prettyUrls(): bool
+{
+    static $enabled = null;
+
+    if ($enabled === null) {
+        $enabled = (bool) getOption('pretty_urls', true);
+    }
+
+    return $enabled;
+}
+
+/**
+ * ساخت آدرس یک مسیر داخلی سایت
+ *
+ * تمام پیوندهای داخلی باید از این تابع بسازند، نه siteUrl()؛ در غیر این
+ * صورت با خاموش بودن نشانی تمیز، پیوندها به مسیرهایی اشاره می‌کنند که
+ * سرور نمی‌شناسد.
+ *
+ * @param string               $path  مسیر داخلی، مثلاً 'blog/سلام'
+ * @param array<string, mixed> $query پارامترهای اضافه
+ */
+function routeUrl(string $path = '', array $query = []): string
+{
+    $path = ltrim($path, '/');
+
+    if (prettyUrls()) {
+        $url = siteUrl($path);
+    } else {
+        $url = siteUrl('index.php');
+
+        if ($path !== '') {
+            // اسلش‌ها عمداً رمزگذاری نمی‌شوند تا آدرس خوانا بماند؛
+            // http_build_query آن‌ها را به %2F تبدیل می‌کند
+            $segments = array_map('rawurlencode', explode('/', $path));
+            $url .= '?route=' . implode('/', $segments);
+        }
+    }
+
+    if (!empty($query)) {
+        $url .= (str_contains($url, '?') ? '&' : '?') . http_build_query($query);
+    }
+
+    return $url;
+}
+
+/**
  * آدرس عمومی یک نوشته یا برگه
  */
 function postUrl(array $post): string
 {
     $prefix = ($post['type'] ?? 'post') === 'page' ? '' : 'blog/';
 
-    return siteUrl($prefix . ($post['slug'] ?? ''));
+    return routeUrl($prefix . ($post['slug'] ?? ''));
 }

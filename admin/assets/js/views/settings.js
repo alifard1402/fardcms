@@ -256,6 +256,22 @@ export const SettingsView = {
 
             <div class="divider"></div>
 
+            <Switch v-model="settings.pretty_urls" label="نشانی‌های تمیز"
+                    hint="نشانی‌هایی مثل /blog/عنوان-نوشته. اگر هاست شما mod_rewrite ندارد یا
+                          فایل .htaccess را نادیده می‌گیرد، برگه‌ها خطای ۴۰۴ می‌دهند؛ در آن حالت
+                          این گزینه را خاموش کنید تا سایت با نشانی index.php?route=… کار کند." />
+
+            <div class="alert alert-warning" v-if="!settings.pretty_urls" style="margin-top:14px">
+              <Icon name="alert" :size="18" />
+              <div>
+                نشانی‌های تمیز خاموش است. پیوندها به شکل
+                <code class="mono">index.php?route=…</code> ساخته می‌شوند.
+                برای سازگاری بهتر با موتورهای جستجو، در صورت امکان mod_rewrite را فعال کنید.
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
             <div class="field">
               <label class="field-label">شناسه Google Analytics</label>
               <input v-model="settings.google_analytics" type="text" class="input input-ltr"

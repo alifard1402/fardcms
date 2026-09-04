@@ -37,7 +37,7 @@ $meta = (array) view('meta', []);
         از پیشخوان اولین نوشته خود را بسازید.
       </p>
       <?php if (canAccessAdmin()): ?>
-        <a class="btn btn-primary" href="<?= e(siteUrl('admin/#/posts/new')) ?>">نوشتن اولین مطلب</a>
+        <a class="btn btn-primary" href="<?= e(assetUrl('admin/#/posts/new')) ?>">نوشتن اولین مطلب</a>
       <?php endif; ?>
     </div>
   <?php else: ?>
@@ -47,7 +47,7 @@ $meta = (array) view('meta', []);
       <?php endforeach; ?>
     </div>
 
-    <?php renderPagination($meta, (string) view('base_url', siteUrl('blog'))); ?>
+    <?php renderPagination($meta, (string) view('base_url', routeUrl('blog'))); ?>
   <?php endif; ?>
 </div>
 <?php

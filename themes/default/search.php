@@ -24,7 +24,7 @@ $query = (string) view('query', '');
     <?php endif; ?>
   </header>
 
-  <form class="search-form" action="<?= e(siteUrl('search')) ?>" method="get" role="search"
+  <form class="search-form" action="<?= e(routeUrl('search')) ?>" method="get" role="search"
         style="max-width:560px;margin-bottom:38px">
     <input class="search-input" type="search" name="q" value="<?= e($query) ?>"
            placeholder="چه چیزی را جستجو می‌کنید؟" aria-label="عبارت جستجو"
@@ -55,7 +55,7 @@ $query = (string) view('query', '');
       <p class="empty-text">
         املای عبارت را بررسی کنید یا با کلمات کلیدی کوتاه‌تر جستجو کنید.
       </p>
-      <a class="btn btn-outline" href="<?= e(siteUrl('blog')) ?>">مشاهده همه نوشته‌ها</a>
+      <a class="btn btn-outline" href="<?= e(routeUrl('blog')) ?>">مشاهده همه نوشته‌ها</a>
     </div>
   <?php else: ?>
     <div class="post-grid">

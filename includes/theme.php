@@ -192,6 +192,34 @@ function currentUrl(): string
 }
 
 /**
+ * آیا این آدرس همان صفحه‌ای است که کاربر روی آن است؟
+ *
+ * در حالت نشانی پرسمانی همه پیوندها مسیر یکسانی دارند (index.php) و
+ * تفاوتشان در پارامتر route است؛ پس مقایسه مسیر تنها کافی نیست و همه
+ * آیتم‌ها فعال نشان داده می‌شوند.
+ */
+function isCurrentUrl(string $url): bool
+{
+    if ($url === '' || $url === '#') {
+        return false;
+    }
+
+    $normalize = static function (string $target): string {
+        $path = rtrim((string) (parse_url($target, PHP_URL_PATH) ?: '/'), '/');
+
+        // مسیر اسکریپت خودش بخشی از هویت صفحه نیست
+        $path = preg_replace('#/index\.php$#', '', $path) ?? $path;
+
+        parse_str((string) parse_url($target, PHP_URL_QUERY), $query);
+        $route = trim((string) ($query['route'] ?? ''), '/');
+
+        return $path . '|' . $route;
+    };
+
+    return $normalize($url) === $normalize($_SERVER['REQUEST_URI'] ?? '/');
+}
+
+/**
  * رندر یک فهرست ناوبری
  *
  * @param string $location جایگاه فهرست، مثلاً 'primary'
@@ -216,15 +244,10 @@ function renderMenu(string $location, string $class = 'nav-menu'): void
  */
 function renderMenuItems(array $items): void
 {
-    $currentPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-
     foreach ($items as $item) {
         $url = (string) $item['resolved_url'];
         $hasChildren = !empty($item['children']);
-
-        // آیتم فعال بر اساس تطابق مسیر آدرس تعیین می‌شود
-        $itemPath = parse_url($url, PHP_URL_PATH) ?: '';
-        $isActive = $itemPath !== '' && rtrim($itemPath, '/') === rtrim($currentPath, '/');
+        $isActive = isCurrentUrl($url);
 
         $classes = array_filter([
             $hasChildren ? 'has-children' : '',

@@ -19,7 +19,7 @@ $commentsOpen = $post['comment_status'] === 'open' && getOption('allow_comments'
       <?php if (!empty($post['categories'])): ?>
         <div class="post-card-terms">
           <?php foreach ($post['categories'] as $category): ?>
-            <a class="term-chip" href="<?= e(siteUrl('category/' . $category['slug'])) ?>">
+            <a class="term-chip" href="<?= e(routeUrl('category/' . $category['slug'])) ?>">
               <?= e($category['name']) ?>
             </a>
           <?php endforeach; ?>
@@ -88,7 +88,7 @@ $commentsOpen = $post['comment_status'] === 'open' && getOption('allow_comments'
         <div class="tag-list">
           <span class="tag-list-label">برچسب‌ها:</span>
           <?php foreach ($post['tags'] as $tag): ?>
-            <a class="tag-pill" href="<?= e(siteUrl('tag/' . $tag['slug'])) ?>">
+            <a class="tag-pill" href="<?= e(routeUrl('tag/' . $tag['slug'])) ?>">
               <?= e($tag['name']) ?>
             </a>
           <?php endforeach; ?>
@@ -115,7 +115,7 @@ $commentsOpen = $post['comment_status'] === 'open' && getOption('allow_comments'
             <?php endif; ?>
             <div>
               <div class="author-box-name">
-                <a href="<?= e(siteUrl('author/' . $author['username'])) ?>"><?= e($author['name']) ?></a>
+                <a href="<?= e(routeUrl('author/' . $author['username'])) ?>"><?= e($author['name']) ?></a>
               </div>
               <p class="author-box-bio"><?= e($author['bio']) ?></p>
             </div>
@@ -126,7 +126,7 @@ $commentsOpen = $post['comment_status'] === 'open' && getOption('allow_comments'
       <?php if ($prev !== null || $next !== null): ?>
         <nav class="post-nav" aria-label="نوشته‌های قبلی و بعدی">
           <?php if ($prev !== null): ?>
-            <a class="post-nav-link" href="<?= e(siteUrl('blog/' . $prev['slug'])) ?>" rel="prev">
+            <a class="post-nav-link" href="<?= e(routeUrl('blog/' . $prev['slug'])) ?>" rel="prev">
               <span class="post-nav-dir">← نوشته قبلی</span>
               <span class="post-nav-title"><?= e($prev['title']) ?></span>
             </a>
@@ -135,7 +135,7 @@ $commentsOpen = $post['comment_status'] === 'open' && getOption('allow_comments'
           <?php endif; ?>
 
           <?php if ($next !== null): ?>
-            <a class="post-nav-link post-nav-link--next" href="<?= e(siteUrl('blog/' . $next['slug'])) ?>" rel="next">
+            <a class="post-nav-link post-nav-link--next" href="<?= e(routeUrl('blog/' . $next['slug'])) ?>" rel="next">
               <span class="post-nav-dir">نوشته بعدی →</span>
               <span class="post-nav-title"><?= e($next['title']) ?></span>
             </a>

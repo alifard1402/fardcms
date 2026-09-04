@@ -14,7 +14,7 @@ themePart('header');
       می‌توانید از فهرست سایت یا جستجو استفاده کنید.
     </p>
 
-    <form class="search-form" action="<?= e(siteUrl('search')) ?>" method="get" role="search"
+    <form class="search-form" action="<?= e(routeUrl('search')) ?>" method="get" role="search"
           style="max-width:420px;margin:0 auto 22px">
       <input class="search-input" type="search" name="q" placeholder="جستجو در سایت…"
              aria-label="عبارت جستجو">
@@ -22,8 +22,8 @@ themePart('header');
     </form>
 
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <a class="btn btn-primary" href="<?= e(siteUrl('')) ?>">بازگشت به خانه</a>
-      <a class="btn btn-outline" href="<?= e(siteUrl('blog')) ?>">مشاهده وبلاگ</a>
+      <a class="btn btn-primary" href="<?= e(routeUrl('')) ?>">بازگشت به خانه</a>
+      <a class="btn btn-outline" href="<?= e(routeUrl('blog')) ?>">مشاهده وبلاگ</a>
     </div>
   </div>
 </div>

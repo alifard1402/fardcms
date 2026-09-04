@@ -39,7 +39,16 @@
 </FilesMatch>
 
 # پوشه‌های داخلی نباید از بیرون خوانده شوند
-RedirectMatch 403 ^/(storage|includes|templates|tests)/
+#
+# با RewriteRule نوشته شده و نه RedirectMatch: الگوی RedirectMatch به ریشه
+# دامنه گره می‌خورد، پس در نصب زیرشاخه (مثل /mysite/) هرگز مطابقت نمی‌کرد و
+# محافظت بی‌اثر می‌شد. مسیر RewriteRule نسبت به همین پوشه سنجیده می‌شود.
+<IfModule mod_rewrite.c>
+    RewriteRule ^(storage|includes|templates|tests)/ - [F,L]
+</IfModule>
+
+# لایه دوم: هر یک از این پوشه‌ها .htaccess اختصاصی خود را هم دارد تا اگر
+# این فایل نادیده گرفته شود باز هم محافظت برجا بماند.
 
 # ─── فشرده‌سازی ────────────────────────────────────────────
 <IfModule mod_deflate.c>
@@ -66,8 +75,10 @@ RedirectMatch 403 ^/(storage|includes|templates|tests)/
 </IfModule>
 
 # ─── صفحه‌های خطا ──────────────────────────────────────────
-ErrorDocument 403 /index.php
-ErrorDocument 404 /index.php
+# ErrorDocument عمداً تنظیم نشده است: مسیر آن نسبت به ریشه دامنه تفسیر
+# می‌شود، پس در نصب زیرشاخه به سایت دیگری اشاره می‌کرد. مسیریابی بالا
+# همه درخواست‌ها را به index.php می‌سپارد و خود سیستم صفحه ۴۰۴ را
+# نمایش می‌دهد.
 
 # ─── جلوگیری از فهرست شدن محتوای پوشه‌ها ───────────────────
 Options -Indexes

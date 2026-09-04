@@ -229,12 +229,17 @@ function replaceMenuItems(int $menuId, array $items): array
  */
 function resolveMenuItemUrl(array $item): string
 {
+    $custom = (string) ($item['url'] ?? '');
+
     return match ($item['type']) {
-        'page' => !empty($item['object_slug']) ? siteUrl($item['object_slug']) : '#',
-        'post' => !empty($item['object_slug']) ? siteUrl('blog/' . $item['object_slug']) : '#',
-        'category' => !empty($item['term_slug']) ? siteUrl('category/' . $item['term_slug']) : '#',
-        'tag' => !empty($item['term_slug']) ? siteUrl('tag/' . $item['term_slug']) : '#',
-        default => (string) ($item['url'] ?: '#'),
+        'page' => !empty($item['object_slug']) ? routeUrl($item['object_slug']) : '#',
+        'post' => !empty($item['object_slug']) ? routeUrl('blog/' . $item['object_slug']) : '#',
+        'category' => !empty($item['term_slug']) ? routeUrl('category/' . $item['term_slug']) : '#',
+        'tag' => !empty($item['term_slug']) ? routeUrl('tag/' . $item['term_slug']) : '#',
+        // پیوند دلخواهی که با / شروع شود مسیر داخلی است و باید مانند بقیه
+        // مسیرها ساخته شود، وگرنه با خاموش بودن نشانی تمیز کار نمی‌کند
+        default => $custom === '' ? '#'
+            : (str_starts_with($custom, '/') ? routeUrl(ltrim($custom, '/')) : $custom),
     };
 }
 

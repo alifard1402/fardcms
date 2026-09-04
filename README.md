@@ -112,6 +112,40 @@ php setup.php --email=admin@example.com --username=admin \
 - **Apache** — فایل `.htaccess` آماده است؛ فقط `mod_rewrite` باید فعال باشد.
 - **nginx** — از `nginx.conf.example` استفاده کنید.
 
+### نصب در زیرشاخه
+
+نصب در زیرشاخه (مثل `https://example.com/fardcms/`) پشتیبانی می‌شود.
+تنها نکته این است که `SITE_URL` باید شامل همان زیرشاخه باشد:
+
+```php
+define('SITE_URL', 'https://example.com/fardcms');
+```
+
+اگر این مقدار اشتباه باشد، پیوندهای سایت به مسیر نادرست اشاره می‌کنند.
+
+### اگر برگه‌ها باز نمی‌شوند
+
+نشانی‌هایی مثل `/contact` به `mod_rewrite` نیاز دارند. بخشی از هاست‌های
+اشتراکی این افزونه را ندارند یا `.htaccess` را نادیده می‌گیرند؛ در آن
+حالت صفحه اصلی باز می‌شود اما هر برگه و نوشته خطای ۴۰۴ می‌دهد — که روی
+بعضی هاست‌ها به شکل صفحه سفید دیده می‌شود.
+
+فایل `diagnose.php` را در مرورگر باز کنید:
+
+```
+https://example.com/fardcms/diagnose.php
+```
+
+این صفحه پیش‌نیازها، اتصال دیتابیس، درستی `SITE_URL` و وضعیت مسیریابی
+را بررسی می‌کند و می‌گوید کدام نوع نشانی روی هاست شما کار می‌کند.
+
+اگر `mod_rewrite` در دسترس نبود، در پیشخوان به **تنظیمات → پیشرفته**
+بروید و **«نشانی‌های تمیز»** را خاموش کنید. از آن پس پیوندها به شکل
+`index.php?route=contact` ساخته می‌شوند و سایت بدون `mod_rewrite` کامل
+کار می‌کند.
+
+> پس از رفع مشکل، `diagnose.php` را حذف کنید.
+
 می‌توانید تنظیمات را با متغیر محیطی هم بدهید که برای استقرار خودکار
 مناسب‌تر است: `FARDCMS_DB_HOST`، `FARDCMS_DB_NAME`، `FARDCMS_DB_USER`،
 `FARDCMS_DB_PASS`، `FARDCMS_URL`، `FARDCMS_SECRET`، `FARDCMS_DEBUG`.
@@ -123,6 +157,7 @@ fardcms/
 ├── config.php              تنظیمات و بارگذاری هسته
 ├── index.php               کنترلر سایت عمومی (مسیریابی)
 ├── setup.php               نصب‌کننده (وب و خط فرمان)
+├── diagnose.php            ابزار تشخیص مشکل نصب
 ├── router.dev.php          مسیریاب سرور توسعه PHP
 │
 ├── includes/               هسته سیستم
@@ -162,7 +197,7 @@ fardcms/
 ├── assets/                 قلم، Vue و استایل صفحه‌های ورود
 ├── uploads/                فایل‌های کاربران
 ├── storage/                قفل نصب، کش، گزارش ایمیل
-└── tests/                  ۲۳۳ تست
+└── tests/                  ۲۶۳ تست
 ```
 
 ## نقش‌ها و دسترسی‌ها
@@ -229,6 +264,7 @@ FARDCMS_DEBUG=1 php -S 127.0.0.1:8765 -t . router.dev.php
 php tests/sanitizer-test.php   # ۶۲ مورد پاک‌سازی HTML
 php tests/security-test.php    # ۳۸ بررسی امنیتی
 bash tests/api-test.sh         # ۶۴ تست API
+bash tests/routing-test.sh     # ۳۰ تست مسیریابی در هر دو حالت نشانی
 node tests/site-test.mjs       # ۳۴ تست مرورگر سایت
 node tests/admin-test.mjs      # ۳۵ تست مرورگر پنل
 ```

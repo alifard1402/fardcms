@@ -53,13 +53,27 @@ if (isMaintenanceMode()) {
 }
 
 // ─── استخراج مسیر درخواست ──────────────────────────────────
-$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+//
+// دو حالت پشتیبانی می‌شود:
+//   ۱) نشانی تمیز، مثل /blog/سلام  (نیازمند mod_rewrite)
+//   ۲) نشانی پرسمانی، مثل index.php?route=blog/سلام
+//
+// حالت دوم برای هاست‌هایی است که .htaccess را نادیده می‌گیرند یا
+// mod_rewrite ندارند؛ بدون آن تمام پیوندهای داخلی خطای ۴۰۴ می‌گیرند.
+if (isset($_GET['route'])) {
+    $requestPath = '/' . trim((string) $_GET['route'], '/');
+} else {
+    $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
-// حذف مسیر پوشه نصب، اگر سایت در زیرشاخه اجرا می‌شود
-$basePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+    // حذف مسیر پوشه نصب، اگر سایت در زیرشاخه اجرا می‌شود
+    $basePath = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
 
-if ($basePath !== '' && str_starts_with($requestPath, $basePath)) {
-    $requestPath = substr($requestPath, strlen($basePath));
+    if ($basePath !== '' && str_starts_with($requestPath, $basePath)) {
+        $requestPath = substr($requestPath, strlen($basePath));
+    }
+
+    // اگر درخواست مستقیم به index.php باشد، بخش اسکریپت از مسیر حذف می‌شود
+    $requestPath = preg_replace('#^/index\.php#', '', $requestPath) ?? $requestPath;
 }
 
 $segments = array_values(array_filter(explode('/', trim($requestPath, '/')), fn($s) => $s !== ''));
@@ -121,6 +135,14 @@ switch ($route) {
         showRobots();
         break;
 
+    // ─── کاوه تشخیص مسیریابی ───────────────────────────────
+    // فقط یک رشته ثابت برمی‌گرداند تا diagnose.php بفهمد آیا نشانی
+    // تمیز روی این سرور کار می‌کند یا نه. هیچ داده‌ای افشا نمی‌کند.
+    case '__fardcms_probe':
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Cache-Control: no-store');
+        exit('FARDCMS_ROUTING_OK');
+
     // ─── در غیر این صورت: یک برگه با این نامک ──────────────
     default:
         // مسیرهای تودرتوی برگه‌ها با آخرین بخش آدرس تطبیق داده می‌شوند
@@ -149,7 +171,7 @@ function showFrontPage(int $page, int $perPage): void
                 'page_title'       => $post['title'],
                 'meta_description' => $post['excerpt'],
                 'meta_image'       => $post['featured_image'],
-                'canonical'        => siteUrl(''),
+                'canonical'        => routeUrl(''),
                 'is_front'         => true,
                 'is_single'        => true,
             ]);
@@ -182,7 +204,7 @@ function showBlogIndex(int $page, int $perPage, bool $isFront = false): void
     renderTemplate('index', [
         'posts'            => $result['items'],
         'meta'             => $result['meta'],
-        'base_url'         => $isFront ? siteUrl('') : siteUrl('blog'),
+        'base_url'         => $isFront ? routeUrl('') : routeUrl('blog'),
         'page_title'       => $isFront ? '' : 'وبلاگ',
         'meta_description' => $settings['site_description'],
         'archive_title'    => $isFront ? $settings['site_tagline'] : 'آخرین نوشته‌ها',
@@ -299,7 +321,7 @@ function showTermArchive(string $slug, string $taxonomy, int $page, int $perPage
     }
 
     $label = $taxonomy === 'category' ? 'دسته' : 'برچسب';
-    $base = siteUrl(($taxonomy === 'category' ? 'category/' : 'tag/') . $term['slug']);
+    $base = routeUrl(($taxonomy === 'category' ? 'category/' : 'tag/') . $term['slug']);
 
     renderTemplate('archive', [
         'posts'            => $result['items'],
@@ -347,7 +369,7 @@ function showAuthorArchive(string $username, int $page, int $perPage): void
         renderNotFound();
     }
 
-    $base = siteUrl('author/' . $author['username']);
+    $base = routeUrl('author/' . $author['username']);
 
     renderTemplate('archive', [
         'posts'            => $result['items'],
@@ -386,7 +408,7 @@ function showSearch(int $page, int $perPage): void
         'posts'         => $result['items'],
         'meta'          => $result['meta'],
         'query'         => $query,
-        'base_url'      => siteUrl('search?q=' . urlencode($query)),
+        'base_url'      => routeUrl('search', ['q' => $query]),
         'page_title'    => $query !== '' ? "جستجو برای «$query»" : 'جستجو',
         'archive_title' => $query !== ''
             ? 'نتایج جستجو برای «' . $query . '»'
@@ -413,11 +435,11 @@ function showFeed(): void
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title><?= e($settings['site_title']) ?></title>
-    <link><?= e(siteUrl('')) ?></link>
+    <link><?= e(routeUrl('')) ?></link>
     <description><?= e($settings['site_description']) ?></description>
     <language>fa-IR</language>
     <lastBuildDate><?= e(date('r')) ?></lastBuildDate>
-    <atom:link href="<?= e(siteUrl('feed')) ?>" rel="self" type="application/rss+xml"/>
+    <atom:link href="<?= e(routeUrl('feed')) ?>" rel="self" type="application/rss+xml"/>
     <?php foreach ($posts as $post): ?>
     <item>
       <title><?= e($post['title']) ?></title>
@@ -460,13 +482,13 @@ function showSitemap(): void
     echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
 
     // صفحه اصلی
-    echo "  <url><loc>" . e(siteUrl('')) . "</loc><changefreq>daily</changefreq>"
+    echo "  <url><loc>" . e(routeUrl('')) . "</loc><changefreq>daily</changefreq>"
        . "<priority>1.0</priority></url>\n";
-    echo "  <url><loc>" . e(siteUrl('blog')) . "</loc><changefreq>daily</changefreq>"
+    echo "  <url><loc>" . e(routeUrl('blog')) . "</loc><changefreq>daily</changefreq>"
        . "<priority>0.9</priority></url>\n";
 
     foreach ($rows as $row) {
-        $url = siteUrl(($row['type'] === 'page' ? '' : 'blog/') . $row['slug']);
+        $url = routeUrl(($row['type'] === 'page' ? '' : 'blog/') . $row['slug']);
 
         echo '  <url><loc>' . e($url) . '</loc>'
            . '<lastmod>' . e(date('Y-m-d', strtotime($row['updated_at']))) . '</lastmod>'
@@ -474,7 +496,7 @@ function showSitemap(): void
     }
 
     foreach ($terms as $term) {
-        $url = siteUrl(($term['taxonomy'] === 'category' ? 'category/' : 'tag/') . $term['slug']);
+        $url = routeUrl(($term['taxonomy'] === 'category' ? 'category/' : 'tag/') . $term['slug']);
 
         echo '  <url><loc>' . e($url) . '</loc><changefreq>weekly</changefreq>'
            . "<priority>0.6</priority></url>\n";
@@ -509,7 +531,7 @@ function showRobots(): void
         echo "Disallow: $path\n";
     }
 
-    echo "\nSitemap: " . siteUrl('sitemap.xml') . "\n";
+    echo "\nSitemap: " . routeUrl('sitemap.xml') . "\n";
     exit;
 }
 

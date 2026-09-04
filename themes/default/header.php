@@ -24,7 +24,7 @@ $currentUser = getCurrentUser();
   <link rel="stylesheet" href="<?= e(assetUrl('assets/css/fonts.css')) ?>">
   <link rel="stylesheet" href="<?= e(themeUrl('assets/style.css')) ?>">
   <link rel="alternate" type="application/rss+xml"
-        title="<?= e($settings['site_title']) ?>" href="<?= e(siteUrl('feed')) ?>">
+        title="<?= e($settings['site_title']) ?>" href="<?= e(routeUrl('feed')) ?>">
 
   <?php if (!empty($settings['google_analytics'])): ?>
     <?php /* شناسه از تنظیمات می‌آید و در ذخیره‌سازی به الگوی مجاز محدود شده است */ ?>
@@ -43,7 +43,7 @@ $currentUser = getCurrentUser();
   <header class="site-header">
     <div class="container">
       <div class="header-inner">
-        <a class="site-brand" href="<?= e(siteUrl('')) ?>">
+        <a class="site-brand" href="<?= e(routeUrl('')) ?>">
           <?php if (!empty($settings['site_logo'])): ?>
             <img class="brand-logo" src="<?= e($settings['site_logo']) ?>"
                  alt="<?= e($settings['site_title']) ?>">
@@ -67,8 +67,8 @@ $currentUser = getCurrentUser();
           } else {
               // اگر فهرستی ساخته نشده باشد، پیوندهای پایه نمایش داده می‌شود
               echo '<ul class="nav-menu">';
-              echo '<li><a href="' . e(siteUrl('')) . '">خانه</a></li>';
-              echo '<li><a href="' . e(siteUrl('blog')) . '">وبلاگ</a></li>';
+              echo '<li><a href="' . e(routeUrl('')) . '">خانه</a></li>';
+              echo '<li><a href="' . e(routeUrl('blog')) . '">وبلاگ</a></li>';
               echo '</ul>';
           }
           ?>
@@ -98,12 +98,12 @@ $currentUser = getCurrentUser();
 
           <?php if ($currentUser !== null): ?>
             <?php if (canAccessAdmin()): ?>
-              <a class="btn btn-outline btn-sm" href="<?= e(siteUrl('admin/')) ?>">پیشخوان</a>
+              <a class="btn btn-outline btn-sm" href="<?= e(assetUrl('admin/')) ?>">پیشخوان</a>
             <?php else: ?>
               <span class="text-muted" style="font-size:13px"><?= e($currentUser['name']) ?></span>
             <?php endif; ?>
           <?php else: ?>
-            <a class="btn btn-outline btn-sm" href="<?= e(siteUrl('login.html')) ?>">ورود</a>
+            <a class="btn btn-outline btn-sm" href="<?= e(assetUrl('login.html')) ?>">ورود</a>
           <?php endif; ?>
 
           <button class="icon-button nav-toggle" type="button" id="nav-toggle"
@@ -117,7 +117,7 @@ $currentUser = getCurrentUser();
       </div>
 
       <div class="header-search" id="header-search">
-        <form class="search-form" action="<?= e(siteUrl('search')) ?>" method="get" role="search">
+        <form class="search-form" action="<?= e(routeUrl('search')) ?>" method="get" role="search">
           <input class="search-input" type="search" name="q" id="search-field"
                  placeholder="در سایت جستجو کنید…"
                  value="<?= e((string) view('query', '')) ?>"

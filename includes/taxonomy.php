@@ -47,7 +47,7 @@ function getTerms(string $taxonomy = 'category', array $args = []): array
         $term['id'] = (int) $term['id'];
         $term['count'] = (int) $term['count'];
         $term['parent_id'] = $term['parent_id'] !== null ? (int) $term['parent_id'] : null;
-        $term['url'] = siteUrl(($term['taxonomy'] === 'category' ? 'category/' : 'tag/') . $term['slug']);
+        $term['url'] = routeUrl(($term['taxonomy'] === 'category' ? 'category/' : 'tag/') . $term['slug']);
 
         return $term;
     }, $stmt->fetchAll());
