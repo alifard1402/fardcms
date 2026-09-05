@@ -29,6 +29,9 @@ export const MediaPicker = {
   props: {
     multiple: { type: Boolean, default: false },
     imagesOnly: { type: Boolean, default: false },
+    // فیلتر دلخواه نوع رسانه: image | video | audio | other
+    // افزونه‌ها از این استفاده می‌کنند؛ imagesOnly میان‌بر همان image است
+    type: { type: String, default: '' },
     title: { type: String, default: 'کتابخانه رسانه' },
   },
   emits: ['select', 'close'],
@@ -50,7 +53,7 @@ export const MediaPicker = {
           page,
           per_page: 24,
           search: search.value,
-          type: props.imagesOnly ? 'image' : '',
+          type: props.type || (props.imagesOnly ? 'image' : ''),
         });
 
         items.value = data.media || [];
@@ -142,7 +145,7 @@ export const MediaPicker = {
           آپلود فایل
         </button>
         <input ref="fileInput" type="file" multiple class="hidden"
-               :accept="imagesOnly ? 'image/*' : undefined"
+               :accept="imagesOnly ? 'image/*' : (type ? type + '/*' : undefined)"
                @change="uploadFiles($event.target.files)">
       </div>
 

@@ -35,7 +35,7 @@ import { ExtensionsView } from './views/extensions.js';
  * است. ماژول‌های js همیشه بازبینی می‌شوند، پس این بررسی اینجا انجام
  * می‌شود تا خودِ پنل بتواند استایل تازه را دوباره بگیرد.
  */
-const EXPECTED_CSS_VERSION = '1.1.0';
+const EXPECTED_CSS_VERSION = '1.1.1';
 
 /** مقدار --fardcms-css از استایلِ اعمال‌شده فعلی */
 function loadedCssVersion() {

@@ -8,6 +8,16 @@ import { store, dismissToast } from '../store.js';
 const { computed, ref, watch, onMounted, onBeforeUnmount, nextTick } = Vue;
 
 /* ─── پنجره مودال ─────────────────────────────────────────── */
+/**
+ * پنجره مودال
+ *
+ * محتوا با Teleport به body منتقل می‌شود و نه جایی که در قالب نوشته شده.
+ * دلیلش: کارت‌ها در پوسته تیره backdrop-filter دارند و هر عنصری که
+ * backdrop-filter داشته باشد برای فرزندان position:fixed خود «قاب مرجع»
+ * می‌سازد. مودالی که داخل یک کارت رندر می‌شد، به‌جای پوشاندن کل صفحه،
+ * داخل همان کارت می‌نشست و overflow:hidden کارت هم می‌بریدش — روی موبایل
+ * کاملاً غیرقابل استفاده می‌شد.
+ */
 export const Modal = {
   name: 'Modal',
   components: { Icon },
@@ -38,6 +48,7 @@ export const Modal = {
     return { onKeydown };
   },
   template: `
+    <Teleport to="body">
     <div class="modal-backdrop" @click.self="!busy && $emit('close')" role="dialog" aria-modal="true">
       <div class="modal" :class="size ? 'modal-' + size : ''">
         <div class="modal-header">
@@ -50,6 +61,7 @@ export const Modal = {
         <div class="modal-footer" v-if="$slots.footer"><slot name="footer" /></div>
       </div>
     </div>
+    </Teleport>
   `,
 };
 

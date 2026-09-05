@@ -99,8 +99,68 @@
     `,
   };
 
+  /**
+   * فیلد انتخاب یک فایل از کتابخانه رسانه
+   *
+   * نشانی دستی از کاربر خواسته نمی‌شود: او فایلش را در کتابخانه رسانه
+   * آپلود کرده و باید از همان‌جا انتخابش کند.
+   */
+  const MediaField = {
+    name: 'MediaField',
+    props: {
+      modelValue: { type: String, default: '' },
+      type: { type: String, default: '' },     // image | video
+      label: { type: String, default: 'انتخاب فایل' },
+    },
+    emits: ['update:modelValue'],
+    setup(props, { emit }) {
+      const picker = ref(false);
+
+      const onSelect = (items) => {
+        picker.value = false;
+
+        if (items.length) emit('update:modelValue', items[0].url);
+      };
+
+      /** فقط نام فایل نشان داده می‌شود؛ نشانی کامل طولانی و ناخواناست */
+      const fileName = computed(() => {
+        try {
+          return decodeURIComponent(props.modelValue.split('/').pop() || '');
+        } catch {
+          return props.modelValue;
+        }
+      });
+
+      const isImage = computed(() => /\.(jpe?g|png|gif|webp|svg)$/i.test(props.modelValue));
+
+      return { picker, onSelect, fileName, isImage };
+    },
+    template: `
+      <div>
+        <div v-if="modelValue" class="media-field">
+          <img v-if="isImage" :src="modelValue" alt="">
+          <span v-else class="media-field-icon">▶</span>
+
+          <span class="media-field-name" dir="ltr">{{ fileName }}</span>
+
+          <button type="button" class="btn btn-sm btn-ghost" @click="picker = true">تغییر</button>
+          <button type="button" class="btn btn-sm btn-ghost"
+                  @click="$emit('update:modelValue', '')">حذف</button>
+        </div>
+
+        <button v-else type="button" class="btn btn-ghost btn-block" @click="picker = true">
+          {{ label }}
+        </button>
+
+        <fardcms-media-picker v-if="picker" :type="type" :images-only="type === 'image'"
+                              :title="label" @select="onSelect" @close="picker = false" />
+      </div>
+    `,
+  };
+
   const VideoPanel = {
     name: 'VideoPanel',
+    components: { MediaField },
     props: { ctx: { type: Object, required: true } },
     setup(props) {
       return {
@@ -131,9 +191,8 @@
         </div>
 
         <div class="field" v-if="provider === 'file'">
-          <label class="field-label">نشانی فایل ویدیو</label>
-          <input v-model="file" type="text" class="input" dir="ltr"
-                 placeholder="uploads/1404/06/clip.mp4">
+          <label class="field-label">فایل ویدیو</label>
+          <media-field v-model="file" type="video" label="انتخاب ویدیو از کتابخانه" />
           <div class="field-hint">
             برای فیلم‌های بلند آپارات مناسب‌تر است؛ هاست اشتراکی پهنای باند کمی دارد.
           </div>
@@ -141,8 +200,7 @@
 
         <div class="field mb-0" v-if="provider">
           <label class="field-label">تصویر پیش‌نمایش ویدیو</label>
-          <input v-model="poster" type="text" class="input" dir="ltr"
-                 placeholder="نشانی تصویر">
+          <media-field v-model="poster" type="image" label="انتخاب تصویر پیش‌نمایش" />
         </div>
       </div>
     `,

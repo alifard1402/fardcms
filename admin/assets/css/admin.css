@@ -8,7 +8,7 @@
    CDN نسخه قدیمی CSS را نگه داشته باشد، خودش فایل تازه را دوباره
    می‌گیرد. بدون این کار، به‌روزرسانی ظاهری تا پایان مدت کش به کاربر
    نمی‌رسید و کاربر گمان می‌کرد اصلاح انجام نشده است. */
-:root { --fardcms-css: "1.1.0"; }
+:root { --fardcms-css: "1.1.1"; }
 
 /* ─── متغیرهای پوسته تیره (پیش‌فرض) ─────────────────────── */
 :root {
@@ -570,6 +570,45 @@ svg { flex-shrink: 0; }
 .switch.on::after { transform: translateX(-18px); }
 html[dir="ltr"] .switch::after { right: auto; left: 3px; }
 html[dir="ltr"] .switch.on::after { transform: translateX(18px); }
+
+/* ─── فیلد انتخاب فایل از کتابخانه (در اختیار افزونه‌ها) ─── */
+.media-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+}
+.media-field img {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.media-field-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+/* نام فایل لاتین است و در متن راست‌به‌چپ نباید بشکند */
+.media-field-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  unicode-bidi: plaintext;
+}
 
 /* ─── گالری تصاویر نوشته ────────────────────────────────── */
 .gallery-thumbs {
