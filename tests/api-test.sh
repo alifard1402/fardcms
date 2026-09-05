@@ -14,6 +14,11 @@ chk() { # name expected_substring actual
   else echo "  FAIL  $1"; echo "        got: $(echo $3 | head -c 300)"; fail=$((fail+1)); fi
 }
 
+nchk() { # name forbidden_substring actual — برعکس chk
+  if echo "$3" | grep -q "$2"; then echo "  FAIL  $1"; echo "        got: $(echo $3 | head -c 300)"; fail=$((fail+1));
+  else echo "  PASS  $1"; pass=$((pass+1)); fi
+}
+
 echo "=== unauthenticated ==="
 r=$(curl -s -c $J "$B/api/auth/me.php")
 chk "me: not authenticated" '"authenticated":false' "$r"
@@ -170,6 +175,40 @@ r=$(curl -s -b $J "$B/api/settings/index.php")
 chk "posts_per_page clamped to 100" '"posts_per_page":100' "$r"
 chk "default_role cannot be admin" '"default_role":"subscriber"' "$r"
 chk "analytics script rejected" '"google_analytics":""' "$r"
+
+echo "=== قالب سایت ==="
+# یک قالب موقت می‌سازیم تا سوییچ واقعی سنجیده شود، نه فقط وجود فهرست
+TMPTHEME=themes/__test-theme
+mkdir -p $TMPTHEME
+printf '<?php echo "FARDCMS_TEST_THEME";' > $TMPTHEME/index.php
+printf '{"name":"قالب آزمایشی","description":"موقت","version":"9.9.9"}' > $TMPTHEME/theme.json
+# پوشه‌ای بدون index.php قالب نیست و نباید در فهرست بیاید
+mkdir -p themes/__not-a-theme
+
+r=$(curl -s -b $J "$B/api/settings/index.php")
+chk "themes listed" '"themes"' "$r"
+chk "default theme listed" '"slug":"default"' "$r"
+chk "temp theme discovered" '__test-theme' "$r"
+nchk "folder without index.php ignored" '__not-a-theme' "$r"
+
+r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" \
+  -d '{"active_theme":"__test-theme"}' "$B/api/settings/index.php")
+chk "theme switch saved" '"active_theme":"__test-theme"' "$r"
+chk "public site uses new theme" 'FARDCMS_TEST_THEME' "$(curl -s "$B/")"
+
+# نام ناموجود و پیمایش مسیر نباید پذیرفته شود
+r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" \
+  -d '{"active_theme":"../../etc"}' "$B/api/settings/index.php")
+chk "path traversal theme rejected" '"active_theme":"__test-theme"' "$r"
+
+r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" \
+  -d '{"active_theme":"no-such-theme"}' "$B/api/settings/index.php")
+chk "missing theme rejected" '"active_theme":"__test-theme"' "$r"
+
+r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" \
+  -d '{"active_theme":"default"}' "$B/api/settings/index.php")
+chk "switch back to default" '"active_theme":"default"' "$r"
+rm -rf $TMPTHEME themes/__not-a-theme
 
 echo "=== menus + dashboard ==="
 r=$(curl -s -b $J "$B/api/menus/index.php")

@@ -8,7 +8,7 @@
    CDN نسخه قدیمی CSS را نگه داشته باشد، خودش فایل تازه را دوباره
    می‌گیرد. بدون این کار، به‌روزرسانی ظاهری تا پایان مدت کش به کاربر
    نمی‌رسید و کاربر گمان می‌کرد اصلاح انجام نشده است. */
-:root { --fardcms-css: "1.0.7"; }
+:root { --fardcms-css: "1.0.8"; }
 
 /* ─── متغیرهای پوسته تیره (پیش‌فرض) ─────────────────────── */
 :root {
@@ -570,6 +570,59 @@ svg { flex-shrink: 0; }
 .switch.on::after { transform: translateX(-18px); }
 html[dir="ltr"] .switch::after { right: auto; left: 3px; }
 html[dir="ltr"] .switch.on::after { transform: translateX(18px); }
+
+/* ─── انتخاب قالب سایت ─────────────────────────────────── */
+.theme-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  text-align: start;
+  font: inherit;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+.theme-card:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+.theme-card.active { border-color: var(--accent); background: var(--accent-soft); }
+.theme-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.theme-shot {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  color: var(--text-faint);
+}
+.theme-shot img { width: 100%; height: 100%; object-fit: cover; }
+.theme-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.theme-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.theme-desc {
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+/* نام پوشه و شماره نسخه لاتین‌اند و باید در متن راست‌به‌چپ نشکنند */
+.theme-sub {
+  font-size: 11px;
+  color: var(--text-faint);
+  unicode-bidi: plaintext;
+}
 
 .form-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .form-actions {

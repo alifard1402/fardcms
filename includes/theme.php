@@ -28,6 +28,74 @@ function activeThemePath(): string
 }
 
 /**
+ * فهرست قالب‌های نصب‌شده
+ *
+ * هر پوشه در themes/ که index.php داشته باشد یک قالب است. توضیحاتش از
+ * theme.json خوانده می‌شود؛ نبودن یا خراب بودن آن فایل قالب را از فهرست
+ * حذف نمی‌کند، فقط نامش همان نام پوشه می‌ماند.
+ *
+ * @return array<int, array{slug:string, name:string, description:string,
+ *                          version:string, author:string, screenshot:string}>
+ */
+function installedThemes(): array
+{
+    $themes = [];
+
+    foreach ((array) glob(THEMES_PATH . '/*', GLOB_ONLYDIR) as $dir) {
+        $slug = basename($dir);
+
+        // همان قاعده‌ای که activeThemePath برای ساخت مسیر به کار می‌برد
+        if (!preg_match('/^[a-z0-9_-]+$/i', $slug) || !is_file("$dir/index.php")) {
+            continue;
+        }
+
+        $meta = [];
+
+        if (is_readable("$dir/theme.json")) {
+            $decoded = json_decode((string) file_get_contents("$dir/theme.json"), true);
+            $meta = is_array($decoded) ? $decoded : [];
+        }
+
+        $shot = '';
+
+        foreach (['screenshot.jpg', 'screenshot.png', 'screenshot.webp'] as $file) {
+            if (is_file("$dir/$file")) {
+                $shot = assetUrl("themes/$slug/$file");
+                break;
+            }
+        }
+
+        $themes[] = [
+            'slug'        => $slug,
+            'name'        => (string) ($meta['name'] ?? $slug),
+            'description' => (string) ($meta['description'] ?? ''),
+            'version'     => (string) ($meta['version'] ?? ''),
+            'author'      => (string) ($meta['author'] ?? ''),
+            'screenshot'  => $shot,
+        ];
+    }
+
+    usort($themes, fn($a, $b) => $a['slug'] === 'default' ? -1
+        : ($b['slug'] === 'default' ? 1 : strcmp($a['name'], $b['name'])));
+
+    return $themes;
+}
+
+/**
+ * آیا این نام، قالبی نصب‌شده است؟
+ */
+function themeExists(string $slug): bool
+{
+    foreach (installedThemes() as $theme) {
+        if ($theme['slug'] === $slug) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
  * آدرس فایل‌های قالب فعال
  *
  * ریشه‌نسبی است تا CSS و جاوااسکریپت قالب مستقل از نام میزبان بارگذاری شوند.

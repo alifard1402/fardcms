@@ -19,6 +19,7 @@ if ($method === 'GET') {
         ),
         'pages'     => getPosts(['type' => 'page', 'status' => 'publish', 'per_page' => 100])['items'],
         'locations' => menuLocations(),
+        'themes'    => installedThemes(),
     ]);
 }
 
@@ -50,6 +51,15 @@ jsonSuccess(['settings' => getSiteSettings()], 'تنظیمات ذخیره شد')
  */
 function sanitizeSettingValue(string $name, mixed $value, mixed $default): mixed
 {
+    // نام قالب باید به یک قالب نصب‌شده اشاره کند. مقدار نامعتبر، قالب
+    // فعلی را نگه می‌دارد و نه پیش‌فرض را: یک مقدار اشتباه نباید ظاهر
+    // سایتِ کارکرده را عوض کند.
+    if ($name === 'active_theme') {
+        $slug = trim((string) $value);
+
+        return themeExists($slug) ? $slug : (string) getOption('active_theme', $default);
+    }
+
     // مقادیر بولی
     if (is_bool($default)) {
         return (bool) $value;

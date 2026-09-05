@@ -17,6 +17,7 @@ export const SettingsView = {
     const settings = ref({});
     const roles = ref([]);
     const pages = ref([]);
+    const themes = ref([]);
     const loading = ref(true);
     const saving = ref(false);
     const tab = ref('general');
@@ -24,6 +25,7 @@ export const SettingsView = {
 
     const tabs = [
       { value: 'general', label: 'عمومی', icon: 'settings' },
+      { value: 'appearance', label: 'قالب', icon: 'image' },
       { value: 'reading', label: 'خواندن', icon: 'posts' },
       { value: 'discussion', label: 'گفت‌وگو', icon: 'comment' },
       { value: 'social', label: 'شبکه‌های اجتماعی', icon: 'external' },
@@ -46,6 +48,7 @@ export const SettingsView = {
         settings.value = data.settings || {};
         roles.value = (data.roles || []).filter((r) => r.value !== 'administrator');
         pages.value = data.pages || [];
+        themes.value = data.themes || [];
 
         // اطمینان از وجود ساختار لینک‌های اجتماعی
         if (!settings.value.social_links) {
@@ -89,7 +92,7 @@ export const SettingsView = {
     };
 
     return {
-      settings, roles, pages, loading, saving, tab, tabs, socialFields, picker,
+      settings, roles, pages, themes, loading, saving, tab, tabs, socialFields, picker,
       save, onMediaSelect,
     };
   },
@@ -168,6 +171,43 @@ export const SettingsView = {
                         placeholder="© ۱۴۰۵ — تمام حقوق محفوظ است"></textarea>
               <div class="field-hint">HTML ساده مانند پیوند و متن درشت پذیرفته می‌شود.</div>
             </div>
+          </div>
+        </div>
+
+        <!-- قالب -->
+        <div class="card" v-if="tab === 'appearance'">
+          <div class="card-header"><span class="card-title">قالب سایت</span></div>
+          <div class="card-body">
+            <p class="field-hint" style="margin-bottom:16px">
+              قالب، ظاهر سایت عمومی را تعیین می‌کند و روی پنل مدیریت اثری ندارد.
+              برای افزودن قالب تازه، پوشه‌اش را در <code>themes/</code> آپلود کنید.
+            </p>
+
+            <div class="theme-grid">
+              <button v-for="item in themes" :key="item.slug" type="button"
+                      :class="['theme-card', { active: settings.active_theme === item.slug }]"
+                      @click="settings.active_theme = item.slug">
+                <span class="theme-shot">
+                  <img v-if="item.screenshot" :src="item.screenshot" :alt="item.name" loading="lazy">
+                  <Icon v-else name="image" :size="26" />
+                </span>
+                <span class="theme-meta">
+                  <span class="theme-name">
+                    {{ item.name }}
+                    <span v-if="settings.active_theme === item.slug" class="badge badge-success">فعال</span>
+                  </span>
+                  <span v-if="item.description" class="theme-desc">{{ item.description }}</span>
+                  <span class="theme-sub" dir="ltr">
+                    {{ item.slug }}<template v-if="item.version"> · {{ item.version }}</template>
+                  </span>
+                </span>
+              </button>
+            </div>
+
+            <p v-if="!themes.length" class="field-hint">هیچ قالبی در پوشه themes/ پیدا نشد.</p>
+            <p v-else class="field-hint" style="margin-top:14px">
+              پس از انتخاب، دکمه «ذخیره تنظیمات» را بزنید.
+            </p>
           </div>
         </div>
 

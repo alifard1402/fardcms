@@ -33,7 +33,7 @@ import { ActivityView } from './views/activity.js';
  * است. ماژول‌های js همیشه بازبینی می‌شوند، پس این بررسی اینجا انجام
  * می‌شود تا خودِ پنل بتواند استایل تازه را دوباره بگیرد.
  */
-const EXPECTED_CSS_VERSION = '1.0.7';
+const EXPECTED_CSS_VERSION = '1.0.8';
 
 /** مقدار --fardcms-css از استایلِ اعمال‌شده فعلی */
 function loadedCssVersion() {
