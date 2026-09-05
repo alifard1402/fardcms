@@ -1,0 +1,262 @@
+<?php
+// این صفحه عمداً PHP است و نه HTML ایستا: مهر «?v=…» فایل‌های ظاهری از
+// زمان تغییر خود آن فایل‌ها ساخته می‌شود. هر بار که فایلی آپلود شود،
+// آدرسش تازه می‌شود و مرورگر یا CDN نسخه کهنه را تحویل نمی‌دهد. پیش از
+// این، مهر نسخه دستی داخل فایل HTML نوشته می‌شد و اگر خودِ آن صفحه کش
+// می‌شد، به‌روزرسانی ظاهری هرگز به کاربر نمی‌رسید.
+require __DIR__ . '/includes/asset-stamp.php';
+?>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>تعیین رمز عبور جدید</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/css/fonts.css<?= assetStamp('assets/css/fonts.css') ?>">
+  <link rel="stylesheet" href="assets/css/auth.css<?= assetStamp('assets/css/auth.css') ?>">
+  <script src="assets/vendor/vue.global.prod.js<?= assetStamp('assets/vendor/vue.global.prod.js') ?>"></script>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div id="app">
+    <div class="auth-card">
+      <!-- حالت موفقیت -->
+      <div v-if="isSuccess" class="success-overlay">
+        <div class="success-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div class="success-title">رمز عبور تغییر کرد</div>
+        <div class="success-text">در حال انتقال به صفحه ورود…</div>
+      </div>
+
+      <div class="auth-header">
+        <div class="auth-logo">
+          <svg width="27" height="27" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/>
+          </svg>
+        </div>
+        <h1 class="auth-title">رمز عبور جدید</h1>
+        <p class="auth-subtitle">یک رمز عبور قوی و تازه برای حساب خود انتخاب کنید</p>
+      </div>
+
+      <!-- بررسی توکن -->
+      <div v-if="checking" class="center" style="padding:34px 0">
+        <span class="spinner" style="margin:0 auto;width:28px;height:28px;border-width:3px"></span>
+        <p class="auth-subtitle" style="margin-top:16px">در حال بررسی لینک بازیابی…</p>
+      </div>
+
+      <!-- توکن نامعتبر -->
+      <template v-else-if="!tokenValid">
+        <div class="message message-error">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <span>{{ error || 'این لینک بازیابی نامعتبر یا منقضی شده است.' }}</span>
+        </div>
+
+        <a href="forgot-password.php" class="submit-btn"
+           style="display:block;text-align:center;text-decoration:none">
+          <span class="btn-content">درخواست لینک جدید</span>
+        </a>
+
+        <div class="center">
+          <a href="login.php" class="back-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            بازگشت به صفحه ورود
+          </a>
+        </div>
+      </template>
+
+      <!-- فرم تعیین رمز جدید -->
+      <template v-else>
+        <div v-if="error" class="message message-error">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <span>{{ error }}</span>
+        </div>
+
+        <form @submit.prevent="submit" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="password">رمز عبور جدید</label>
+            <div class="input-wrapper">
+              <input id="password" v-model="password"
+                     :type="showPassword ? 'text' : 'password'"
+                     class="form-input with-toggle" :class="{ 'has-error': fieldErrors.password }"
+                     placeholder="حداقل ۸ کاراکتر"
+                     autocomplete="new-password" :disabled="isLoading" autofocus>
+              <span class="input-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/>
+                </svg>
+              </span>
+              <button type="button" class="toggle-password" @click="showPassword = !showPassword"
+                      :aria-label="showPassword ? 'پنهان کردن رمز' : 'نمایش رمز'">
+                <svg v-if="!showPassword" width="20" height="20" fill="none" stroke="currentColor"
+                     viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg v-else width="20" height="20" fill="none" stroke="currentColor"
+                     viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.9 17.9A10 10 0 0112 19c-6.4 0-10-7-10-7a17.6 17.6 0 015.1-5.9m3.2-1A10 10 0 0112 5c6.4 0 10 7 10 7a17.6 17.6 0 01-2.2 3.2M9.9 9.9a3 3 0 104.2 4.2M2 2l20 20"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="strength-bar" v-if="password">
+              <div class="strength-fill"
+                   :style="{ width: strength.percent + '%', background: strength.color }"></div>
+            </div>
+            <div class="strength-label" v-if="password" :style="{ color: strength.color }">
+              قدرت رمز: {{ strength.label }}
+            </div>
+
+            <div class="field-error" v-if="fieldErrors.password">{{ fieldErrors.password }}</div>
+            <div class="field-hint" v-else-if="!password">
+              باید شامل حروف بزرگ، کوچک و عدد باشد.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirm">تکرار رمز عبور</label>
+            <div class="input-wrapper">
+              <input id="confirm" v-model="confirm" type="password"
+                     class="form-input" :class="{ 'has-error': fieldErrors.confirm }"
+                     placeholder="رمز عبور را دوباره وارد کنید"
+                     autocomplete="new-password" :disabled="isLoading">
+              <span class="input-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              </span>
+            </div>
+            <div class="field-error" v-if="fieldErrors.confirm">{{ fieldErrors.confirm }}</div>
+          </div>
+
+          <div class="message message-info">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>
+            </svg>
+            <span>پس از تغییر رمز، تمام دستگاه‌ها از حساب شما خارج می‌شوند.</span>
+          </div>
+
+          <button type="submit" class="submit-btn" :disabled="isLoading">
+            <span class="btn-content">
+              <template v-if="isLoading">
+                <span class="spinner"></span><span>در حال ذخیره…</span>
+              </template>
+              <template v-else>
+                <span>تعیین رمز عبور</span>
+                <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 12H5M11 19l-7-7 7-7"/>
+                </svg>
+              </template>
+            </span>
+          </button>
+        </form>
+      </template>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createAuthApp, apiPost, apiGet, passwordStrength, validatePassword }
+      from './assets/js/auth.js';
+
+    const { ref, computed, onMounted } = Vue;
+
+    createAuthApp({
+      setup() {
+        const token = ref('');
+        const password = ref('');
+        const confirm = ref('');
+        const fieldErrors = ref({});
+        const error = ref('');
+        const showPassword = ref(false);
+        const isLoading = ref(false);
+        const isSuccess = ref(false);
+        const checking = ref(true);
+        const tokenValid = ref(false);
+
+        const strength = computed(() => passwordStrength(password.value));
+
+        // اعتبار توکن پیش از نمایش فرم بررسی می‌شود
+        onMounted(async () => {
+          token.value = new URLSearchParams(window.location.search).get('token') || '';
+
+          if (!token.value) {
+            error.value = 'لینک بازیابی ناقص است. لطفاً از ایمیل خود روی لینک کلیک کنید.';
+            checking.value = false;
+            return;
+          }
+
+          try {
+            await apiGet('auth/verify-token.php', { token: token.value });
+            tokenValid.value = true;
+          } catch (e) {
+            error.value = e.message;
+          } finally {
+            checking.value = false;
+          }
+        });
+
+        const validate = () => {
+          fieldErrors.value = {};
+
+          const passwordError = validatePassword(password.value);
+          if (passwordError) fieldErrors.value.password = passwordError;
+
+          if (password.value !== confirm.value) {
+            fieldErrors.value.confirm = 'تکرار رمز عبور مطابقت ندارد';
+          }
+
+          return Object.keys(fieldErrors.value).length === 0;
+        };
+
+        const submit = async () => {
+          error.value = '';
+
+          if (!validate()) return;
+
+          isLoading.value = true;
+
+          try {
+            await apiPost('auth/reset-password.php', {
+              token: token.value,
+              password: password.value,
+            });
+
+            isSuccess.value = true;
+            setTimeout(() => window.location.replace('login.php?reset=1'), 1500);
+          } catch (e) {
+            error.value = e.message;
+
+            // توکن ممکن است در این فاصله منقضی شده باشد
+            if (e.status === 410) tokenValid.value = false;
+          } finally {
+            isLoading.value = false;
+          }
+        };
+
+        return {
+          password, confirm, fieldErrors, error, showPassword,
+          isLoading, isSuccess, checking, tokenValid, strength, submit,
+        };
+      },
+    });
+  </script>
+</body>
+</html>

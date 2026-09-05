@@ -526,8 +526,8 @@ function showRobots(): void
     echo "Allow: /\n\n";
     echo "# پنل مدیریت، نقاط پایانی API و صفحه‌های احراز هویت ایندکس نمی‌شوند\n";
 
-    foreach (['/admin/', '/api/', '/search', '/login.html', '/register.html',
-              '/forgot-password.html', '/reset-password.html', '/setup.php'] as $path) {
+    foreach (['/admin/', '/api/', '/search', '/login.php', '/register.php',
+              '/forgot-password.php', '/reset-password.php', '/setup.php'] as $path) {
         echo "Disallow: $path\n";
     }
 

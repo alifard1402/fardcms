@@ -1,0 +1,44 @@
+<?php
+// این صفحه عمداً PHP است و نه HTML ایستا: مهر «?v=…» فایل‌های ظاهری از
+// زمان تغییر خود آن فایل‌ها ساخته می‌شود. هر بار که فایلی آپلود شود،
+// آدرسش تازه می‌شود و مرورگر یا CDN نسخه کهنه را تحویل نمی‌دهد. پیش از
+// این، مهر نسخه دستی داخل فایل HTML نوشته می‌شد و اگر خودِ آن صفحه کش
+// می‌شد، به‌روزرسانی ظاهری هرگز به کاربر نمی‌رسید.
+require __DIR__ . '/../includes/asset-stamp.php';
+?>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>پنل مدیریت — فرد سی‌ام‌اس</title>
+
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="stylesheet" href="../assets/css/fonts.css<?= assetStamp('assets/css/fonts.css') ?>">
+  <link rel="stylesheet" href="assets/css/admin.css<?= assetStamp('admin/assets/css/admin.css') ?>">
+
+  <script src="../assets/vendor/vue.global.prod.js<?= assetStamp('assets/vendor/vue.global.prod.js') ?>"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- تا پیش از راه‌اندازی Vue، همین نشانگر نمایش داده می‌شود -->
+    <div style="min-height:100vh;display:grid;place-items:center">
+      <div class="spinner dark lg"></div>
+    </div>
+  </div>
+
+  <noscript>
+    <div style="max-width:440px;margin:80px auto;padding:32px;text-align:center;
+                border:1px solid var(--border);border-radius:18px">
+      <h1 style="font-size:19px;margin-bottom:12px">جاوااسکریپت غیرفعال است</h1>
+      <p style="color:var(--text-muted);line-height:2">
+        پنل مدیریت فرد سی‌ام‌اس برای کار کردن به جاوااسکریپت نیاز دارد.
+        لطفاً آن را در تنظیمات مرورگر خود فعال کنید.
+      </p>
+    </div>
+  </noscript>
+
+  <script type="module" src="assets/js/app.js<?= assetStamp('admin/assets/js/app.js') ?>"></script>
+</body>
+</html>

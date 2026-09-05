@@ -79,7 +79,7 @@ function requireAuth(): void
             jsonError('لطفاً ابتدا وارد شوید', 401);
         }
 
-        header('Location: ' . siteUrl('login.html'));
+        header('Location: ' . siteUrl('login.php'));
         exit;
     }
 }
@@ -118,7 +118,7 @@ function denyAccess(): void
     }
 
     http_response_code(403);
-    header('Location: ' . siteUrl('login.html'));
+    header('Location: ' . siteUrl('login.php'));
     exit;
 }
 

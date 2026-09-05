@@ -19,7 +19,7 @@ page.on('requestfailed', r => errors.push('reqfail: ' + r.url() + ' ' + r.failur
 
 // ─── login page ───
 console.log('=== صفحه ورود ===');
-await page.goto(`${BASE}/login.html`, { waitUntil: 'networkidle' });
+await page.goto(`${BASE}/login.php`, { waitUntil: 'networkidle' });
 chk('login page renders card', await page.locator('.auth-card').isVisible());
 chk('login title present', (await page.locator('.auth-title').textContent()).includes('ورود'));
 chk('font loaded (Vazirmatn)', await page.evaluate(() => document.fonts.check('16px Vazirmatn')));

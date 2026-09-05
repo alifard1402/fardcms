@@ -8,9 +8,12 @@
  * مهر نسخه نداشته باشد، هر به‌روزرسانی ظاهری تا پایان مدت کش به کاربر
  * نمی‌رسد و او صفحه‌ای نیمه‌خراب می‌بیند بدون آنکه بداند چرا.
  *
- * صفحه‌های PHP مهر را خودکار می‌گیرند، اما فایل‌های HTML ثابت (پنل
- * مدیریت و صفحه‌های ورود) مقدار را درون خود دارند و باید با نسخه فعلی
- * هم‌خوان بمانند. این تست همان هم‌خوانی را می‌سنجد.
+ * مهر از زمان تغییر خود فایل ساخته می‌شود، نه از شماره نسخه دستی: هر
+ * فایلی که آپلود شود بلافاصله آدرس تازه می‌گیرد. این تست می‌سنجد که
+ * صفحه‌های ورودی واقعاً همین عدد را چاپ می‌کنند و مسیرشان درست نگاشت
+ * شده است — نگاشت اشتباه بی‌سروصدا مهر را به فایل دیگری گره می‌زند.
+ *
+ * به سرور توسعه روی 127.0.0.1:8765 نیاز دارد.
  */
 
 require dirname(__DIR__) . '/config.php';
@@ -35,71 +38,146 @@ function bad(string $label, string $detail = ''): void
 $version = FARDCMS_VERSION;
 echo "نسخه فعلی: $version\n\n";
 
-echo "═══ صفحه‌های HTML ثابت ═══\n";
+echo "═══ صفحه‌های ورودی (PHP) ═══\n";
 
-$htmlFiles = [
-    'login.html',
-    'register.html',
-    'forgot-password.html',
-    'reset-password.html',
-    'admin/index.html',
+$BASE = getenv('FARDCMS_TEST_URL') ?: 'http://127.0.0.1:8765';
+$root = dirname(__DIR__);
+
+$entryPages = [
+    'login.php',
+    'register.php',
+    'forgot-password.php',
+    'reset-password.php',
+    'admin/index.php',
 ];
 
-foreach ($htmlFiles as $file) {
-    $path = dirname(__DIR__) . '/' . $file;
+foreach ($entryPages as $page) {
+    $path = "$root/$page";
 
     if (!is_file($path)) {
-        bad($file, 'فایل یافت نشد');
+        bad($page, 'فایل یافت نشد');
         continue;
     }
 
-    $html = (string) file_get_contents($path);
+    // صفحه باید مهر را با assetStamp بسازد، نه با عدد ثابت
+    $source = (string) file_get_contents($path);
 
-    // هر ارجاع به css یا js باید مهر نسخه داشته باشد
-    preg_match_all('/(?:href|src)="([^"]+\.(?:css|js))(\?[^"]*)?"/i', $html, $matches, PREG_SET_ORDER);
+    str_contains($source, 'assetStamp(')
+        ? ok("$page — مهر را پویا می‌سازد")
+        : bad($page, 'assetStamp صدا زده نمی‌شود؛ مهر ثابت است');
 
-    $unstamped = [];
-    $stale = [];
+    preg_match('/\?v=[\d.]+"/', $source)
+        && bad($page, 'مهر دست‌نویس در کد مانده است');
 
-    foreach ($matches as $m) {
-        $query = $m[2] ?? '';
+    // و مهم‌تر: خروجی واقعی صفحه
+    $html = @file_get_contents("$BASE/$page");
 
-        if ($query === '') {
-            $unstamped[] = $m[1];
-        } elseif (!str_contains($query, "v=$version")) {
-            $stale[] = $m[1] . $query;
+    if ($html === false) {
+        bad($page, "سرور توسعه پاسخ نداد ($BASE)");
+        continue;
+    }
+
+    if (str_contains($html, '<?')) {
+        bad($page, 'کد PHP اجرا نشده و خام چاپ شده است');
+        continue;
+    }
+
+    preg_match_all('/(?:href|src)="([^"]+\.(?:css|js))\?v=([^"]+)"/i', $html, $refs, PREG_SET_ORDER);
+
+    if (empty($refs)) {
+        bad($page, 'هیچ ارجاع مهرخورده‌ای در خروجی نیست');
+        continue;
+    }
+
+    $wrong = [];
+
+    foreach ($refs as [$_, $href, $stamp]) {
+        // آدرس نسبی را نسبت به پوشه همان صفحه به مسیر واقعی برمی‌گردانیم
+        $target = realpath(dirname($path) . '/' . $href);
+
+        if ($target === false || !str_starts_with($target, $root)) {
+            $wrong[] = "$href → فایلی وجود ندارد";
+            continue;
+        }
+
+        if ($stamp !== (string) filemtime($target)) {
+            $wrong[] = "$href → مهر $stamp ≠ زمان فایل " . filemtime($target);
         }
     }
 
-    // خودِ صفحه هم نباید کش شود، وگرنه مهر نسخه داخلش قدیمی می‌ماند
-    preg_match('/http-equiv=["\']cache-control["\'][^>]*content=["\']([^"\']+)/i', $html, $meta)
-        && str_contains(strtolower($meta[1]), 'no-cache')
-        ? ok("$file — meta no-cache دارد")
-        : bad($file, 'meta http-equiv=cache-control با no-cache ندارد');
-
-    if (empty($matches)) {
-        bad($file, 'هیچ ارجاع css/js پیدا نشد');
-    } elseif (!empty($unstamped)) {
-        bad($file, 'بدون مهر نسخه: ' . implode(', ', $unstamped));
-    } elseif (!empty($stale)) {
-        bad($file, 'مهر نسخه قدیمی: ' . implode(', ', $stale));
-    } else {
-        ok(sprintf('%-24s %d ارجاع، همه با v=%s', $file, count($matches), $version));
-    }
+    empty($wrong)
+        ? ok(sprintf('%-18s %d ارجاع، همه با زمان تغییر خودِ فایل', $page, count($refs)))
+        : bad($page, implode(' | ', $wrong));
 }
+
+// نشانی‌های قدیمی html باید همچنان به همان صفحه برسند: پیوند بازیابی رمز
+// در ایمیل‌های ارسال‌شده با نام قدیمی ثبت شده است.
+$legacy = [
+    'login.html'            => 'login.php',
+    'register.html'         => 'register.php',
+    'forgot-password.html'  => 'forgot-password.php',
+    'reset-password.html'   => 'reset-password.php',
+    'admin/index.html'      => 'index.php',
+];
+
+foreach ($legacy as $old => $new) {
+    $html = @file_get_contents("$BASE/$old");
+
+    $html !== false && !str_contains((string) $html, '<?')
+        ? ok("نشانی قدیمی $old همچنان کار می‌کند")
+        : bad("نشانی قدیمی $old", "به $new نمی‌رسد");
+
+    // روی هاست‌هایی که .htaccess را نادیده می‌گیرند بازنویسی انجام
+    // نمی‌شود و خودِ این فایل ارائه می‌شود؛ پس باید فایل واسط باشد و
+    // پرسمان را هم منتقل کند (توکن بازیابی رمز در آدرس است).
+    $stub = @file_get_contents("$root/$old");
+
+    if ($stub === false) {
+        bad("فایل واسط $old", 'وجود ندارد؛ روی هاست بدون mod_rewrite صفحه گم می‌شود');
+        continue;
+    }
+
+    str_contains($stub, "location.replace('$new' + location.search + location.hash)")
+        ? ok("فایل واسط $old به $new منتقل می‌کند")
+        : bad("فایل واسط $old", "به $new منتقل نمی‌کند یا پرسمان را نگه نمی‌دارد");
+}
+
+// مهر باید با تغییر فایل عوض شود — همان چیزی که کل این سازوکار برای آن است
+$probe = "$root/assets/css/fonts.css";
+$before = assetStamp('assets/css/fonts.css');
+$originalMtime = filemtime($probe);
+touch($probe, $originalMtime + 60);
+clearstatcache(true, $probe);
+
+// حافظه‌ی داخلی assetStamp در همین اجرا پر شده، پس خروجی صفحه را می‌سنجیم
+$html = (string) @file_get_contents("$BASE/login.php");
+preg_match('/fonts\.css\?v=(\d+)/', $html, $m);
+$after = $m[1] ?? '';
+
+touch($probe, $originalMtime);
+
+$after === (string) ($originalMtime + 60) && $after !== ltrim($before, '?v=')
+    ? ok('با تغییر فایل، مهر هم عوض می‌شود')
+    : bad('مهر پس از تغییر فایل', "پیش: $before، پس: $after");
 
 echo "\n═══ آدرس‌های تولیدشده توسط PHP ═══\n";
 
 $generated = [
-    'assetUrl — css'  => assetUrl('assets/css/fonts.css'),
-    'themeUrl — css'  => themeUrl('assets/style.css'),
-    'themeUrl — js'   => themeUrl('assets/theme.js'),
+    'assetUrl — css'  => ['url' => assetUrl('assets/css/fonts.css'),
+                          'path' => 'assets/css/fonts.css'],
+    'themeUrl — css'  => ['url' => themeUrl('assets/style.css'),
+                          'path' => 'themes/default/assets/style.css'],
+    'themeUrl — js'   => ['url' => themeUrl('assets/theme.js'),
+                          'path' => 'themes/default/assets/theme.js'],
 ];
 
-foreach ($generated as $label => $url) {
-    str_contains($url, "v=$version")
+foreach ($generated as $label => $file) {
+    $url = $file['url'];
+    $expectedStamp = 'v=' . filemtime(dirname(__DIR__) . '/' . $file['path']);
+
+    str_contains($url, $expectedStamp)
         ? ok("$label → $url")
-        : bad($label, $url);
+        : bad($label, "$url — انتظار $expectedStamp");
 }
 
 // فایل‌هایی که نباید مهر بخورند
@@ -145,9 +223,13 @@ str_contains($htaccess, 'no-cache, must-revalidate')
     ? ok('ماژول‌های js در .htaccess بازبینی می‌شوند')
     : bad('.htaccess', 'قاعده بازبینی js وجود ندارد');
 
-preg_match('/FilesMatch\s+"\\\\\.html\$"/', $htaccess)
-    ? ok('صفحه‌های html در .htaccess بازبینی می‌شوند')
-    : bad('.htaccess', 'قاعده بازبینی html وجود ندارد');
+str_contains($htaccess, 'RewriteRule ^(login|register|forgot-password|reset-password)\\.html$')
+    ? ok('نشانی‌های قدیمی html در .htaccess به PHP می‌رسند')
+    : bad('.htaccess', 'قاعده سازگاری نشانی قدیمی وجود ندارد');
+
+str_contains($htaccess, 'DirectoryIndex index.php index.html')
+    ? ok('.htaccess صفحه index.php را مقدم می‌داند')
+    : bad('.htaccess', 'DirectoryIndex تنظیم نشده؛ پنل قدیمی ارائه می‌شود');
 
 $nginx = (string) @file_get_contents(dirname(__DIR__) . '/nginx.conf.example');
 
@@ -155,16 +237,16 @@ str_contains($nginx, 'no-cache, must-revalidate')
     ? ok('ماژول‌های js در نمونه nginx بازبینی می‌شوند')
     : bad('nginx.conf.example', 'قاعده بازبینی js وجود ندارد');
 
-str_contains($nginx, '\\.html$')
-    ? ok('صفحه‌های html در نمونه nginx بازبینی می‌شوند')
-    : bad('nginx.conf.example', 'قاعده بازبینی html وجود ندارد');
+str_contains($nginx, 'forgot-password|reset-password)\\.html$')
+    ? ok('نشانی‌های قدیمی html در نمونه nginx تغییرمسیر می‌گیرند')
+    : bad('nginx.conf.example', 'قاعده سازگاری نشانی قدیمی وجود ندارد');
 
 echo "\n════ PASS: $pass  FAIL: $fail ════\n";
 
 if ($fail > 0) {
     echo "\nپس از تغییر FARDCMS_VERSION، مهر نسخه در فایل‌های HTML ثابت را\n"
        . "هم به‌روز کنید:\n"
-       . "  grep -rl '?v=' *.html admin/index.html | xargs sed -i 's/?v=[0-9.]*/?v=$version/g'\n";
+       . "  grep -rl '?v=' *.html admin/index.php | xargs sed -i 's/?v=[0-9.]*/?v=$version/g'\n";
 }
 
 exit($fail > 0 ? 1 : 0);

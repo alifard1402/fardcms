@@ -65,7 +65,7 @@ function logMail(string $to, string $subject, string $body): bool
  */
 function sendPasswordResetEmail(string $email, string $name, string $token): bool
 {
-    $resetUrl = siteUrl('reset-password.html?token=' . urlencode($token));
+    $resetUrl = siteUrl('reset-password.php?token=' . urlencode($token));
 
     $body = renderEmailTemplate('reset-password', [
         'name'      => $name,

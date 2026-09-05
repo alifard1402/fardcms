@@ -8,7 +8,7 @@ const page = await (await browser.newContext({
 page.on('pageerror', e => errors.push('pageerror: ' + e.message));
 page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 
-await page.goto(`${B}/login.html`);
+await page.goto(`${B}/login.php`);
 await page.fill('#login', 'admin'); await page.fill('#password', 'Admin@1234');
 await page.tap('.submit-btn');
 await page.waitForURL(/admin/, { timeout: 15000 });

@@ -69,67 +69,7 @@ check('فایل config.php', $configExists ? 'ok' : 'fail',
     $configExists ? '' : 'این فایل باید کنار diagnose.php باشد');
 
 if (!$configExists) {
-    // ═══════════════════════════════════════════════════════════
-//  فایل‌های روی سرور و کش مرورگر
-// ═══════════════════════════════════════════════════════════
-// هدف این بخش: جدا کردن دو حالتی که از بیرون یکسان به نظر می‌رسند —
-// «فایل جدید آپلود نشده» و «فایل جدید هست ولی مرورگر نسخه قدیمی را
-// نشان می‌دهد». اولی را از روی محتوای فایل روی دیسک می‌فهمیم، دومی را
-// کاربر با باز کردن نشانی خود فایل.
-
-$expected = defined('FARDCMS_VERSION') ? FARDCMS_VERSION : '';
-
-check('نسخه کد روی سرور', $expected !== '' ? 'ok' : 'fail', $expected ?: 'نامشخص',
-    $expected !== '' ? '' : 'includes/version.php آپلود نشده است');
-
-/** خواندن امن یک فایل پروژه */
-function readProjectFile(string $relative): ?string
-{
-    $path = __DIR__ . '/' . $relative;
-
-    return is_readable($path) ? (string) file_get_contents($path) : null;
-}
-
-$adminCss = readProjectFile('admin/assets/css/admin.css');
-
-if ($adminCss === null) {
-    check('فایل admin.css', 'fail', 'یافت نشد',
-        'admin/assets/css/admin.css روی سرور نیست');
-} else {
-    $cssVersion = preg_match('/--fardcms-css:\s*["\']([\d.]+)["\']/', $adminCss, $m)
-        ? $m[1] : '';
-    $matches = $cssVersion !== '' && $cssVersion === $expected;
-
-    check('نسخه فایل admin.css', $matches ? 'ok' : 'fail',
-        $cssVersion !== '' ? $cssVersion : 'بدون شناسه نسخه',
-        $matches ? '' : "این فایل قدیمی است؛ نسخه $expected را دوباره آپلود کنید");
-
-    check('تاریخ آخرین تغییر admin.css', 'info',
-        date('Y-m-d H:i', (int) filemtime(__DIR__ . '/admin/assets/css/admin.css'))
-        . '  ·  ' . number_format(strlen($adminCss)) . ' بایت');
-}
-
-// مهر نسخه‌ی داخل صفحه‌های HTML ایستا باید با نسخه کد یکی باشد؛ اگر
-// نباشد یعنی آن فایل آپلود نشده و مرورگر همچنان استایل قدیمی را می‌خواهد.
-foreach (['admin/index.html', 'login.html', 'register.html',
-          'forgot-password.html', 'reset-password.html'] as $htmlFile) {
-    $html = readProjectFile($htmlFile);
-
-    if ($html === null) {
-        check("فایل $htmlFile", 'warn', 'یافت نشد');
-        continue;
-    }
-
-    preg_match_all('/\?v=([\d.]+)/', $html, $stamps);
-    $found = array_values(array_unique($stamps[1]));
-    $stale = array_filter($found, fn($v) => $v !== $expected);
-
-    check("مهر نسخه در $htmlFile", empty($stale) ? 'ok' : 'fail',
-        empty($found) ? 'بدون مهر نسخه' : implode('، ', $found),
-        empty($stale) ? '' : "این فایل قدیمی است؛ نسخه $expected را دوباره آپلود کنید");
-}
-
-renderReport();
+    renderReport();
     exit;
 }
 
@@ -276,6 +216,73 @@ if ($state === 'installed') {
             $themeOk ? '' : 'پوشه قالب یافت نشد؛ به default برگردانده می‌شود');
     } catch (Throwable $e) {
         check('خواندن محتوا', 'fail', get_class($e), $e->getMessage());
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  فایل‌های روی سرور و کش مرورگر
+// ═══════════════════════════════════════════════════════════
+// هدف این بخش: جدا کردن دو حالتی که از بیرون یکسان به نظر می‌رسند —
+// «فایل جدید آپلود نشده» و «فایل جدید هست ولی مرورگر نسخه قدیمی را
+// نشان می‌دهد». اولی را از روی محتوای فایل روی دیسک می‌فهمیم، دومی را
+// کاربر با باز کردن نشانی خود فایل.
+
+$expected = defined('FARDCMS_VERSION') ? FARDCMS_VERSION : '';
+
+check('نسخه کد روی سرور', $expected !== '' ? 'ok' : 'fail', $expected ?: 'نامشخص',
+    $expected !== '' ? '' : 'includes/version.php آپلود نشده است');
+
+/** خواندن امن یک فایل پروژه */
+function readProjectFile(string $relative): ?string
+{
+    $path = __DIR__ . '/' . $relative;
+
+    return is_readable($path) ? (string) file_get_contents($path) : null;
+}
+
+$adminCss = readProjectFile('admin/assets/css/admin.css');
+
+if ($adminCss === null) {
+    check('فایل admin.css', 'fail', 'یافت نشد',
+        'admin/assets/css/admin.css روی سرور نیست');
+} else {
+    $cssVersion = preg_match('/--fardcms-css:\s*["\']([\d.]+)["\']/', $adminCss, $m)
+        ? $m[1] : '';
+    $matches = $cssVersion !== '' && $cssVersion === $expected;
+
+    check('نسخه فایل admin.css', $matches ? 'ok' : 'fail',
+        $cssVersion !== '' ? $cssVersion : 'بدون شناسه نسخه',
+        $matches ? '' : "این فایل قدیمی است؛ نسخه $expected را دوباره آپلود کنید");
+
+    check('تاریخ آخرین تغییر admin.css', 'info',
+        date('Y-m-d H:i', (int) filemtime(__DIR__ . '/admin/assets/css/admin.css'))
+        . '  ·  ' . number_format(strlen($adminCss)) . ' بایت');
+}
+
+// صفحه‌های ورودی باید PHP باشند و مهر ضدکش را خودشان بسازند. اگر نسخه
+// HTML قدیمی هنوز روی سرور مانده باشد، ممکن است به‌جای نسخه تازه ارائه
+// شود و کاربر دوباره ظاهر کهنه ببیند.
+foreach (['admin/index.php', 'login.php', 'register.php',
+          'forgot-password.php', 'reset-password.php'] as $entry) {
+    $source = readProjectFile($entry);
+
+    if ($source === null) {
+        check("صفحه $entry", 'fail', 'یافت نشد',
+            'این فایل از نسخه تازه آپلود نشده است');
+        continue;
+    }
+
+    $dynamic = str_contains($source, 'assetStamp(');
+
+    check("مهر ضدکش در $entry", $dynamic ? 'ok' : 'fail',
+        $dynamic ? 'پویا (زمان تغییر فایل)' : 'ثابت یا ندارد',
+        $dynamic ? '' : 'نسخه قدیمی این صفحه روی سرور است');
+
+    $legacy = str_replace('.php', '.html', $entry);
+
+    if (readProjectFile($legacy) !== null) {
+        check("فایل قدیمی $legacy", 'warn', 'هنوز روی سرور است',
+            'حذفش کنید تا به‌جای صفحه تازه ارائه نشود');
     }
 }
 

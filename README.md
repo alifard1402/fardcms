@@ -187,7 +187,7 @@ fardcms/
 │   └── comments/  users/  settings/  menus/  dashboard/
 │
 ├── admin/                  پنل مدیریت (Vue 3 SPA)
-│   ├── index.html
+│   ├── index.php           صفحه پنل (مهر ضدکش پویا)
 │   └── assets/
 │       ├── css/admin.css
 │       └── js/

@@ -1,0 +1,241 @@
+<?php
+// این صفحه عمداً PHP است و نه HTML ایستا: مهر «?v=…» فایل‌های ظاهری از
+// زمان تغییر خود آن فایل‌ها ساخته می‌شود. هر بار که فایلی آپلود شود،
+// آدرسش تازه می‌شود و مرورگر یا CDN نسخه کهنه را تحویل نمی‌دهد. پیش از
+// این، مهر نسخه دستی داخل فایل HTML نوشته می‌شد و اگر خودِ آن صفحه کش
+// می‌شد، به‌روزرسانی ظاهری هرگز به کاربر نمی‌رسید.
+require __DIR__ . '/includes/asset-stamp.php';
+?>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>ورود به حساب کاربری</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/css/fonts.css<?= assetStamp('assets/css/fonts.css') ?>">
+  <link rel="stylesheet" href="assets/css/auth.css<?= assetStamp('assets/css/auth.css') ?>">
+  <script src="assets/vendor/vue.global.prod.js<?= assetStamp('assets/vendor/vue.global.prod.js') ?>"></script>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div id="app">
+    <div class="auth-card">
+      <!-- حالت موفقیت -->
+      <div v-if="isSuccess" class="success-overlay">
+        <div class="success-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <div class="success-title">خوش آمدید{{ userName ? '، ' + userName : '' }}!</div>
+        <div class="success-text">در حال انتقال…</div>
+      </div>
+
+      <div class="auth-header">
+        <div class="auth-logo">✦</div>
+        <h1 class="auth-title">ورود به حساب</h1>
+        <p class="auth-subtitle">برای ادامه وارد حساب کاربری خود شوید</p>
+      </div>
+
+      <!-- پیام‌ها -->
+      <div v-if="error" class="message message-error">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>
+        </svg>
+        <span>{{ error }}</span>
+      </div>
+
+      <div v-if="notice" class="message message-info">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>
+        </svg>
+        <span>{{ notice }}</span>
+      </div>
+
+      <form @submit.prevent="submit" novalidate>
+        <!-- نام کاربری یا ایمیل -->
+        <div class="form-group">
+          <label class="form-label" for="login">ایمیل یا نام کاربری</label>
+          <div class="input-wrapper">
+            <input id="login" v-model.trim="form.login" type="text"
+                   class="form-input" :class="{ 'has-error': fieldErrors.login }"
+                   placeholder="ایمیل یا نام کاربری خود را وارد کنید"
+                   autocomplete="username" :disabled="isLoading">
+            <span class="input-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="field-error" v-if="fieldErrors.login">{{ fieldErrors.login }}</div>
+        </div>
+
+        <!-- رمز عبور -->
+        <div class="form-group">
+          <label class="form-label" for="password">رمز عبور</label>
+          <div class="input-wrapper">
+            <input id="password" v-model="form.password"
+                   :type="showPassword ? 'text' : 'password'"
+                   class="form-input with-toggle" :class="{ 'has-error': fieldErrors.password }"
+                   placeholder="رمز عبور"
+                   autocomplete="current-password" :disabled="isLoading">
+            <span class="input-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/>
+              </svg>
+            </span>
+            <button type="button" class="toggle-password" @click="showPassword = !showPassword"
+                    :aria-label="showPassword ? 'پنهان کردن رمز' : 'نمایش رمز'">
+              <svg v-if="!showPassword" width="20" height="20" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg v-else width="20" height="20" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.9 17.9A10 10 0 0112 19c-6.4 0-10-7-10-7a17.6 17.6 0 015.1-5.9m3.2-1A10 10 0 0112 5c6.4 0 10 7 10 7a17.6 17.6 0 01-2.2 3.2M9.9 9.9a3 3 0 104.2 4.2M2 2l20 20"/>
+              </svg>
+            </button>
+          </div>
+          <div class="field-error" v-if="fieldErrors.password">{{ fieldErrors.password }}</div>
+        </div>
+
+        <!-- گزینه‌ها -->
+        <div class="form-options">
+          <label class="checkbox-wrapper" @click.prevent="form.remember = !form.remember">
+            <div class="custom-checkbox" :class="{ checked: form.remember }"
+                 role="checkbox" :aria-checked="form.remember">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="checkbox-label">مرا به خاطر بسپار</span>
+          </label>
+          <a href="forgot-password.php" class="link">فراموشی رمز عبور؟</a>
+        </div>
+
+        <button type="submit" class="submit-btn" :disabled="isLoading">
+          <span class="btn-content">
+            <template v-if="isLoading">
+              <span class="spinner"></span>
+              <span>در حال ورود…</span>
+            </template>
+            <template v-else>
+              <span>ورود به حساب</span>
+              <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M11 19l-7-7 7-7"/>
+              </svg>
+            </template>
+          </span>
+        </button>
+      </form>
+
+      <div class="card-footer" v-if="allowRegistration">
+        حساب کاربری ندارید؟ <a href="register.php" class="link">ثبت‌نام کنید</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createAuthApp, apiPost, apiGet } from './assets/js/auth.js';
+
+    const { ref, reactive, onMounted } = Vue;
+
+    createAuthApp({
+      setup() {
+        const form = reactive({ login: '', password: '', remember: false });
+        const fieldErrors = ref({});
+        const showPassword = ref(false);
+        const isLoading = ref(false);
+        const isSuccess = ref(false);
+        const error = ref('');
+        const notice = ref('');
+        const userName = ref('');
+        const allowRegistration = ref(false);
+
+        // پیام‌های راهنما از پارامترهای آدرس خوانده می‌شوند
+        onMounted(async () => {
+          const params = new URLSearchParams(window.location.search);
+
+          if (params.get('reset') === '1') {
+            notice.value = 'رمز عبور شما تغییر کرد. اکنون می‌توانید وارد شوید.';
+          } else if (params.get('registered') === '1') {
+            notice.value = 'ثبت‌نام کامل شد. با اطلاعات خود وارد شوید.';
+          } else if (params.get('expired') === '1') {
+            notice.value = 'نشست شما منقضی شده است. دوباره وارد شوید.';
+          }
+
+          try {
+            const data = await apiGet('auth/me.php');
+
+            allowRegistration.value = Boolean(data.settings?.allow_registration);
+
+            // کاربر وارد‌شده نیازی به این صفحه ندارد
+            if (data.authenticated) {
+              window.location.replace(data.can_access_admin ? 'admin/' : './');
+            }
+          } catch {
+            // بارگذاری تنظیمات ضروری نیست؛ فرم ورود مستقل کار می‌کند
+          }
+        });
+
+        const validate = () => {
+          fieldErrors.value = {};
+
+          if (!form.login) fieldErrors.value.login = 'ایمیل یا نام کاربری را وارد کنید';
+          if (!form.password) fieldErrors.value.password = 'رمز عبور را وارد کنید';
+
+          return Object.keys(fieldErrors.value).length === 0;
+        };
+
+        const submit = async () => {
+          error.value = '';
+          notice.value = '';
+
+          if (!validate()) return;
+
+          isLoading.value = true;
+
+          try {
+            const data = await apiPost('auth/login.php', {
+              login: form.login,
+              password: form.password,
+              remember: form.remember,
+            });
+
+            userName.value = data.user?.name || '';
+            isSuccess.value = true;
+
+            // تأخیر کوتاه تا انیمیشن موفقیت دیده شود
+            const params = new URLSearchParams(window.location.search);
+            const target = params.get('redirect') === 'admin'
+              ? 'admin/'
+              : (data.redirect || './');
+
+            setTimeout(() => window.location.replace(target), 900);
+          } catch (e) {
+            error.value = e.message;
+          } finally {
+            isLoading.value = false;
+          }
+        };
+
+        return {
+          form, fieldErrors, showPassword, isLoading, isSuccess,
+          error, notice, userName, allowRegistration, submit,
+        };
+      },
+    });
+  </script>
+</body>
+</html>

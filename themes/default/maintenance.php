@@ -34,7 +34,7 @@ $settings = getSiteSettings();
         لطفاً کمی بعد دوباره سر بزنید.
       </p>
 
-      <a class="btn btn-outline" href="<?= e(assetUrl('login.html')) ?>">ورود مدیران</a>
+      <a class="btn btn-outline" href="<?= e(assetUrl('login.php')) ?>">ورود مدیران</a>
     </div>
   </div>
 </body>

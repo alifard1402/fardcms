@@ -1,0 +1,314 @@
+<?php
+// این صفحه عمداً PHP است و نه HTML ایستا: مهر «?v=…» فایل‌های ظاهری از
+// زمان تغییر خود آن فایل‌ها ساخته می‌شود. هر بار که فایلی آپلود شود،
+// آدرسش تازه می‌شود و مرورگر یا CDN نسخه کهنه را تحویل نمی‌دهد. پیش از
+// این، مهر نسخه دستی داخل فایل HTML نوشته می‌شد و اگر خودِ آن صفحه کش
+// می‌شد، به‌روزرسانی ظاهری هرگز به کاربر نمی‌رسید.
+require __DIR__ . '/includes/asset-stamp.php';
+?>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>ثبت‌نام</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/css/fonts.css<?= assetStamp('assets/css/fonts.css') ?>">
+  <link rel="stylesheet" href="assets/css/auth.css<?= assetStamp('assets/css/auth.css') ?>">
+  <script src="assets/vendor/vue.global.prod.js<?= assetStamp('assets/vendor/vue.global.prod.js') ?>"></script>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div id="app">
+    <div class="auth-card wide">
+      <!-- حالت موفقیت -->
+      <div v-if="isSuccess" class="success-overlay">
+        <div class="success-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <div class="success-title">ثبت‌نام کامل شد</div>
+        <div class="success-text">در حال انتقال به صفحه ورود…</div>
+      </div>
+
+      <div class="auth-header">
+        <div class="auth-logo">✦</div>
+        <h1 class="auth-title">ساخت حساب کاربری</h1>
+        <p class="auth-subtitle">برای عضویت، اطلاعات زیر را تکمیل کنید</p>
+      </div>
+
+      <!-- ثبت‌نام غیرفعال است -->
+      <template v-if="registrationClosed">
+        <div class="message message-info">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>
+          </svg>
+          <span>ثبت‌نام در این سایت غیرفعال است. برای عضویت با مدیر سایت تماس بگیرید.</span>
+        </div>
+        <a href="login.php" class="submit-btn" style="display:block;text-align:center;text-decoration:none">
+          <span class="btn-content">بازگشت به صفحه ورود</span>
+        </a>
+      </template>
+
+      <template v-else>
+        <div v-if="error" class="message message-error">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <span>{{ error }}</span>
+        </div>
+
+        <form @submit.prevent="submit" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="name">نام و نام خانوادگی</label>
+            <div class="input-wrapper">
+              <input id="name" v-model.trim="form.name" type="text"
+                     class="form-input" :class="{ 'has-error': fieldErrors.name }"
+                     placeholder="نام کامل خود را وارد کنید"
+                     autocomplete="name" :disabled="isLoading">
+              <span class="input-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/>
+                </svg>
+              </span>
+            </div>
+            <div class="field-error" v-if="fieldErrors.name">{{ fieldErrors.name }}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">ایمیل</label>
+            <div class="input-wrapper">
+              <input id="email" v-model.trim="form.email" type="email"
+                     class="form-input ltr" :class="{ 'has-error': fieldErrors.email }"
+                     placeholder="you@example.com"
+                     autocomplete="email" :disabled="isLoading">
+              <span class="input-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="field-error" v-if="fieldErrors.email">{{ fieldErrors.email }}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="username">نام کاربری <span style="opacity:.6">(اختیاری)</span></label>
+            <div class="input-wrapper">
+              <input id="username" v-model.trim="form.username" type="text"
+                     class="form-input ltr" :class="{ 'has-error': fieldErrors.username }"
+                     placeholder="username"
+                     autocomplete="username" :disabled="isLoading">
+              <span class="input-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6h16M4 12h16M4 18h10"/>
+                </svg>
+              </span>
+            </div>
+            <div class="field-error" v-if="fieldErrors.username">{{ fieldErrors.username }}</div>
+            <div class="field-hint" v-else>اگر خالی بماند، از ایمیل شما ساخته می‌شود.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">رمز عبور</label>
+            <div class="input-wrapper">
+              <input id="password" v-model="form.password"
+                     :type="showPassword ? 'text' : 'password'"
+                     class="form-input with-toggle" :class="{ 'has-error': fieldErrors.password }"
+                     placeholder="حداقل ۸ کاراکتر"
+                     autocomplete="new-password" :disabled="isLoading">
+              <span class="input-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/>
+                </svg>
+              </span>
+              <button type="button" class="toggle-password" @click="showPassword = !showPassword"
+                      :aria-label="showPassword ? 'پنهان کردن رمز' : 'نمایش رمز'">
+                <svg v-if="!showPassword" width="20" height="20" fill="none" stroke="currentColor"
+                     viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg v-else width="20" height="20" fill="none" stroke="currentColor"
+                     viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.9 17.9A10 10 0 0112 19c-6.4 0-10-7-10-7a17.6 17.6 0 015.1-5.9m3.2-1A10 10 0 0112 5c6.4 0 10 7 10 7a17.6 17.6 0 01-2.2 3.2M9.9 9.9a3 3 0 104.2 4.2M2 2l20 20"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- نوار قدرت رمز -->
+            <div class="strength-bar" v-if="form.password">
+              <div class="strength-fill"
+                   :style="{ width: strength.percent + '%', background: strength.color }"></div>
+            </div>
+            <div class="strength-label" v-if="form.password" :style="{ color: strength.color }">
+              قدرت رمز: {{ strength.label }}
+            </div>
+
+            <div class="field-error" v-if="fieldErrors.password">{{ fieldErrors.password }}</div>
+            <div class="field-hint" v-else-if="!form.password">
+              باید شامل حروف بزرگ، کوچک و عدد باشد.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirm">تکرار رمز عبور</label>
+            <div class="input-wrapper">
+              <input id="confirm" v-model="form.confirm" type="password"
+                     class="form-input" :class="{ 'has-error': fieldErrors.confirm }"
+                     placeholder="رمز عبور را دوباره وارد کنید"
+                     autocomplete="new-password" :disabled="isLoading">
+              <span class="input-icon">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              </span>
+            </div>
+            <div class="field-error" v-if="fieldErrors.confirm">{{ fieldErrors.confirm }}</div>
+          </div>
+
+          <div class="form-options">
+            <label class="checkbox-wrapper" @click.prevent="form.terms = !form.terms">
+              <div class="custom-checkbox" :class="{ checked: form.terms }"
+                   role="checkbox" :aria-checked="form.terms">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"
+                     stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <span class="checkbox-label">قوانین سایت را می‌پذیرم</span>
+            </label>
+          </div>
+          <div class="field-error" v-if="fieldErrors.terms"
+               style="margin-top:-18px;margin-bottom:20px">{{ fieldErrors.terms }}</div>
+
+          <button type="submit" class="submit-btn" :disabled="isLoading">
+            <span class="btn-content">
+              <template v-if="isLoading">
+                <span class="spinner"></span><span>در حال ثبت‌نام…</span>
+              </template>
+              <template v-else>
+                <span>ساخت حساب کاربری</span>
+                <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 12H5M11 19l-7-7 7-7"/>
+                </svg>
+              </template>
+            </span>
+          </button>
+        </form>
+
+        <div class="card-footer">
+          حساب کاربری دارید؟ <a href="login.php" class="link">وارد شوید</a>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createAuthApp, apiPost, apiGet, passwordStrength, validatePassword, isValidEmail }
+      from './assets/js/auth.js';
+
+    const { ref, reactive, computed, onMounted } = Vue;
+
+    createAuthApp({
+      setup() {
+        const form = reactive({
+          name: '', email: '', username: '', password: '', confirm: '', terms: false,
+        });
+
+        const fieldErrors = ref({});
+        const showPassword = ref(false);
+        const isLoading = ref(false);
+        const isSuccess = ref(false);
+        const error = ref('');
+        const registrationClosed = ref(false);
+
+        const strength = computed(() => passwordStrength(form.password));
+
+        onMounted(async () => {
+          try {
+            const data = await apiGet('auth/me.php');
+
+            if (data.authenticated) {
+              window.location.replace(data.can_access_admin ? 'admin/' : './');
+              return;
+            }
+
+            registrationClosed.value = !data.settings?.allow_registration;
+          } catch {
+            // اگر تنظیمات خوانده نشد، فرم نمایش داده می‌شود و سرور تصمیم می‌گیرد
+          }
+        });
+
+        const validate = () => {
+          fieldErrors.value = {};
+
+          if (form.name.length < 2) {
+            fieldErrors.value.name = 'نام باید حداقل ۲ کاراکتر باشد';
+          }
+
+          if (!isValidEmail(form.email)) {
+            fieldErrors.value.email = 'ایمیل معتبر وارد کنید';
+          }
+
+          if (form.username && !/^[a-zA-Z0-9._-]{3,50}$/.test(form.username)) {
+            fieldErrors.value.username = 'نام کاربری باید ۳ تا ۵۰ کاراکتر لاتین، عدد، نقطه یا خط تیره باشد';
+          }
+
+          const passwordError = validatePassword(form.password);
+          if (passwordError) {
+            fieldErrors.value.password = passwordError;
+          }
+
+          if (form.password !== form.confirm) {
+            fieldErrors.value.confirm = 'تکرار رمز عبور مطابقت ندارد';
+          }
+
+          if (!form.terms) {
+            fieldErrors.value.terms = 'برای ادامه باید قوانین را بپذیرید';
+          }
+
+          return Object.keys(fieldErrors.value).length === 0;
+        };
+
+        const submit = async () => {
+          error.value = '';
+
+          if (!validate()) return;
+
+          isLoading.value = true;
+
+          try {
+            await apiPost('auth/register.php', {
+              name: form.name,
+              email: form.email,
+              username: form.username || undefined,
+              password: form.password,
+            });
+
+            isSuccess.value = true;
+            setTimeout(() => window.location.replace('login.php?registered=1'), 1400);
+          } catch (e) {
+            error.value = e.message;
+          } finally {
+            isLoading.value = false;
+          }
+        };
+
+        return {
+          form, fieldErrors, showPassword, isLoading, isSuccess,
+          error, registrationClosed, strength, submit,
+        };
+      },
+    });
+  </script>
+</body>
+</html>

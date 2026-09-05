@@ -103,7 +103,7 @@ $currentUser = getCurrentUser();
               <span class="text-muted" style="font-size:13px"><?= e($currentUser['name']) ?></span>
             <?php endif; ?>
           <?php else: ?>
-            <a class="btn btn-outline btn-sm" href="<?= e(assetUrl('login.html')) ?>">ورود</a>
+            <a class="btn btn-outline btn-sm" href="<?= e(assetUrl('login.php')) ?>">ورود</a>
           <?php endif; ?>
 
           <button class="icon-button nav-toggle" type="button" id="nav-toggle"

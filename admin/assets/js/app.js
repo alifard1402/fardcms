@@ -27,13 +27,13 @@ import { ActivityView } from './views/activity.js';
  * نسخه‌ای که این کد انتظار دارد در admin.css ببیند.
  *
  * فایل استایل مقدار --fardcms-css را تعریف می‌کند. اگر مرورگر یا CDN
- * نسخه قدیمی CSS را نگه داشته باشد، مهر نسخه‌ی ?v= داخل index.html هم
+ * نسخه قدیمی CSS را نگه داشته باشد، مهر ?v= داخل index.php هم
  * ممکن است قدیمی مانده باشد و اصلاح‌های ظاهری هرگز به کاربر نرسند —
  * کاربری که فایل‌ها را درست هم آپلود کرده باشد گمان می‌کند اشکال باقی
  * است. ماژول‌های js همیشه بازبینی می‌شوند، پس این بررسی اینجا انجام
  * می‌شود تا خودِ پنل بتواند استایل تازه را دوباره بگیرد.
  */
-const EXPECTED_CSS_VERSION = '1.0.5';
+const EXPECTED_CSS_VERSION = '1.0.6';
 
 /** مقدار --fardcms-css از استایلِ اعمال‌شده فعلی */
 function loadedCssVersion() {
@@ -143,7 +143,7 @@ const App = {
 
         if (!data.authenticated) {
           // کاربر وارد نشده است؛ به صفحه ورود هدایت می‌شود
-          window.location.replace('../login.html?redirect=admin');
+          window.location.replace('../login.php?redirect=admin');
           return;
         }
 
@@ -162,7 +162,7 @@ const App = {
       } catch (error) {
         // نشست منقضی یا خطای شبکه
         if (error instanceof ApiError && error.status === 401) {
-          window.location.replace('../login.html?redirect=admin');
+          window.location.replace('../login.php?redirect=admin');
           return;
         }
 
@@ -223,7 +223,7 @@ const App = {
     const logout = async () => {
       try {
         const data = await api.auth.logout();
-        window.location.replace(data.redirect || '../login.html');
+        window.location.replace(data.redirect || '../login.php');
       } catch (error) {
         notifyError(error);
       }
@@ -274,7 +274,7 @@ const App = {
           <p class="empty-text">{{ bootError }}</p>
           <div class="flex gap-sm" style="justify-content:center">
             <a class="btn btn-secondary" href="../">بازگشت به سایت</a>
-            <a class="btn btn-primary" href="../login.html">ورود با حساب دیگر</a>
+            <a class="btn btn-primary" href="../login.php">ورود با حساب دیگر</a>
           </div>
         </div>
       </div>

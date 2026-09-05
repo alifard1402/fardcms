@@ -61,7 +61,7 @@ await page.route('**/admin.css*', async route => {
     return route.continue();
 });
 
-await page.goto(`${BASE}/login.html`);
+await page.goto(`${BASE}/login.php`);
 await page.fill('#login', 'admin');
 await page.fill('#password', 'Admin@1234');
 await page.click('.submit-btn');

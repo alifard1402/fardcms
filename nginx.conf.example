@@ -71,10 +71,13 @@ server {
         access_log off;
     }
 
-    # صفحه‌های HTML ایستا مهر نسخه‌ی فایل‌های ظاهری را در خود دارند؛
-    # اگر خودشان کش شوند، به‌روزرسانی ظاهری به کاربر نمی‌رسد.
-    location ~* \.html$ {
-        add_header Cache-Control "no-cache, must-revalidate";
+    # نشانی‌های قدیمی: صفحه‌های ورودی از HTML ایستا به PHP تبدیل شده‌اند
+    # (مهر ضدکش را خودشان می‌سازند)، ولی پیوندهای قدیمی — از جمله نشانی
+    # بازیابی رمز داخل ایمیل‌های ارسال‌شده — باید کار کنند.
+    location = /admin/index.html { return 301 /admin/; }
+
+    location ~ ^/(login|register|forgot-password|reset-password)\.html$ {
+        return 301 /$1.php$is_args$args;
     }
 
     # ─── فشرده‌سازی ────────────────────────────────────────
