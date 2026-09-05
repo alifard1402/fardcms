@@ -13,4 +13,7 @@ if (isLoggedIn()) {
     authLogout();
 }
 
-jsonSuccess(['redirect' => 'login.php'], 'با موفقیت خارج شدید');
+// نشانی کامل و نه نسبی: این پاسخ را پنل مدیریت مصرف می‌کند که خودش
+// در /admin/ است، پس مقدار نسبی «login.php» به /admin/login.php تفسیر
+// می‌شد و کاربر پس از خروج به صفحه‌ای می‌رسید که وجود ندارد.
+jsonSuccess(['redirect' => siteUrl('login.php')], 'با موفقیت خارج شدید');

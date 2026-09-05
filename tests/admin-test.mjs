@@ -213,6 +213,25 @@ const overflow = await page.evaluate(() => document.documentElement.scrollWidth 
 chk('no horizontal overflow on mobile', !overflow);
 await page.screenshot({ path: 'shot-mobile.png', fullPage: true });
 
+// ─── خروج از حساب ───
+// آخرین آزمون است چون نشست را پایان می‌دهد.
+//
+// پاسخ API نشانی مقصد را می‌دهد و پیش‌تر مقدارش نسبی بود («login.php»)؛
+// چون پنل در /admin/ اجرا می‌شود، مرورگر آن را /admin/login.php تفسیر
+// می‌کرد و کاربر پس از خروج به صفحه‌ای می‌رسید که وجود ندارد.
+console.log('=== خروج ===');
+await page.setViewportSize({ width: 1400, height: 900 });
+await page.goto(`${BASE}/admin/#/`, { waitUntil: 'networkidle' });
+await page.waitForSelector('.stat-grid', { timeout: 8000 });
+await page.click('.user-trigger');
+await page.waitForTimeout(300);
+await page.click('.dropdown-item:has-text("خروج")');
+await page.waitForTimeout(2500);
+
+chk('خروج به صفحه ورود می‌رسد', /\/login\.php/.test(page.url()), page.url());
+chk('خروج داخل /admin/ نمی‌ماند', !page.url().includes('/admin/login'), page.url());
+chk('فرم ورود پس از خروج رندر شد', await page.locator('#login').isVisible());
+
 await browser.close();
 
 console.log('\n=== خطاهای کنسول ===');
