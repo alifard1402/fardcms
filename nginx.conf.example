@@ -56,9 +56,18 @@ server {
     }
 
     # ─── کش فایل‌های ثابت ──────────────────────────────────
-    location ~* \.(css|js|jpg|jpeg|png|gif|webp|svg|woff2|ico)$ {
+    # تصویر، قلم و CSS با مهر نسخه (?v=…) صدا زده می‌شوند، پس کش طولانی
+    # بی‌خطر است.
+    location ~* \.(css|jpg|jpeg|png|gif|webp|svg|woff2|ico)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # ماژول‌های جاوااسکریپت مهر نسخه را به import های نسبی خود منتقل
+    # نمی‌کنند، پس باید هر بار بازبینی شوند؛ پاسخ ۳۰۴ تقریباً بی‌هزینه است.
+    location ~* \.js$ {
+        add_header Cache-Control "no-cache, must-revalidate";
         access_log off;
     }
 

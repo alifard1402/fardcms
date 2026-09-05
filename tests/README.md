@@ -9,7 +9,9 @@
 php -S 127.0.0.1:8765 -t . router.dev.php
 ```
 
-- برای تست‌های مرورگر: `npm install playwright`
+- برای تست‌های مرورگر: `npm install playwright` — این تست‌ها باید از
+  همان پوشه‌ای اجرا شوند که playwright در آن نصب شده است، مثلاً:
+  `cd /path/with/node_modules && node /path/to/fardcms/tests/mobile-test.mjs`
 
 ## اجرا
 
@@ -29,8 +31,11 @@ bash tests/routing-test.sh
 # سازگاری کوئری‌ها با ONLY_FULL_GROUP_BY (۳۶ مورد)
 php tests/sqlmode-test.php
 
-# سازگاری کد جدید با config.php نسخه‌های قدیمی (۴ مورد)
+# سازگاری کد جدید با config.php نسخه‌های قدیمی
 bash tests/upgrade-test.sh
+
+# مهر نسخه روی فایل‌های ظاهری (۱۳ مورد)
+php tests/cachebust-test.php
 
 # پنل مدیریت روی موبایل
 node tests/mobile-test.mjs
@@ -42,7 +47,7 @@ node tests/site-test.mjs
 node tests/admin-test.mjs
 ```
 
-در مجموع ۳۰۳ مورد بررسی می‌شود.
+در مجموع ۳۱۷ مورد بررسی می‌شود.
 
 > `api-test.sh` جداول را drop و دوباره نصب می‌کند تا نتیجه تکرارپذیر
 > باشد؛ آن را روی دیتابیس واقعی اجرا نکنید.
@@ -63,4 +68,5 @@ node tests/admin-test.mjs
 | حالت SQL | اجرای همه کوئری‌ها زیر ONLY_FULL_GROUP_BY — پیش‌فرض MySQL 5.7/8 که در MariaDB خاموش است |
 | سازگاری ارتقا | اجرای کد امروز با config.php نسخه‌های قبلی؛ config.php کاربر در به‌روزرسانی جایگزین نمی‌شود |
 | موبایل | کشوی نوار کناری، باز و بسته شدن، نبود سرریز افقی |
+| مهر نسخه | هم‌خوانی نسخه در HTML ثابت با FARDCMS_VERSION، تا به‌روزرسانی ظاهری در کش مرورگر گیر نکند |
 | پنل مدیریت | تمام صفحه‌ها، ویرایشگر، پوسته تیره/روشن، بدون خطای کنسول |

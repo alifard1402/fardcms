@@ -200,7 +200,7 @@ fardcms/
 ├── assets/                 قلم، Vue و استایل صفحه‌های ورود
 ├── uploads/                فایل‌های کاربران
 ├── storage/                قفل نصب، کش، گزارش ایمیل
-└── tests/                  ۳۰۳ تست
+└── tests/                  ۳۱۷ تست
 ```
 
 ## نقش‌ها و دسترسی‌ها
@@ -270,6 +270,7 @@ bash tests/api-test.sh         # ۶۴ تست API
 bash tests/routing-test.sh     # ۳۰ تست مسیریابی در هر دو حالت نشانی
 php tests/sqlmode-test.php     # ۳۶ تست سازگاری با ONLY_FULL_GROUP_BY
 bash tests/upgrade-test.sh     # سازگاری با config.php نسخه‌های قدیمی
+php tests/cachebust-test.php   # ۱۳ تست مهر نسخه فایل‌های ظاهری
 node tests/mobile-test.mjs     # پنل مدیریت روی موبایل
 node tests/site-test.mjs       # ۳۴ تست مرورگر سایت
 node tests/admin-test.mjs      # ۳۵ تست مرورگر پنل

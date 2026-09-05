@@ -13,5 +13,5 @@
  */
 
 if (!defined('FARDCMS_VERSION')) {
-    define('FARDCMS_VERSION', '1.0.2');
+    define('FARDCMS_VERSION', '1.0.3');
 }

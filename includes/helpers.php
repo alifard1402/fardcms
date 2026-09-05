@@ -330,7 +330,18 @@ function assetUrl(string $path = ''): string
         $base = ($dir === '/' || $dir === '.' || $dir === '') ? '' : rtrim($dir, '/');
     }
 
-    return $base . '/' . ltrim($path, '/');
+    $url = $base . '/' . ltrim($path, '/');
+
+    // مهر نسخه روی فایل‌های ظاهری
+    //
+    // این فایل‌ها برای سرعت مدت طولانی کش می‌شوند؛ بدون این مهر، هر
+    // به‌روزرسانی ظاهری تا پایان مدت کش به کاربر نمی‌رسد و او صفحه‌ای
+    // نیمه‌خراب می‌بیند بدون اینکه بداند باید کش را پاک کند.
+    if (preg_match('/\.(css|js)$/i', $path)) {
+        $url .= (str_contains($url, '?') ? '&' : '?') . 'v=' . FARDCMS_VERSION;
+    }
+
+    return $url;
 }
 
 /**
