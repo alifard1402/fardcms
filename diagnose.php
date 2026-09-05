@@ -69,7 +69,67 @@ check('فایل config.php', $configExists ? 'ok' : 'fail',
     $configExists ? '' : 'این فایل باید کنار diagnose.php باشد');
 
 if (!$configExists) {
-    renderReport();
+    // ═══════════════════════════════════════════════════════════
+//  فایل‌های روی سرور و کش مرورگر
+// ═══════════════════════════════════════════════════════════
+// هدف این بخش: جدا کردن دو حالتی که از بیرون یکسان به نظر می‌رسند —
+// «فایل جدید آپلود نشده» و «فایل جدید هست ولی مرورگر نسخه قدیمی را
+// نشان می‌دهد». اولی را از روی محتوای فایل روی دیسک می‌فهمیم، دومی را
+// کاربر با باز کردن نشانی خود فایل.
+
+$expected = defined('FARDCMS_VERSION') ? FARDCMS_VERSION : '';
+
+check('نسخه کد روی سرور', $expected !== '' ? 'ok' : 'fail', $expected ?: 'نامشخص',
+    $expected !== '' ? '' : 'includes/version.php آپلود نشده است');
+
+/** خواندن امن یک فایل پروژه */
+function readProjectFile(string $relative): ?string
+{
+    $path = __DIR__ . '/' . $relative;
+
+    return is_readable($path) ? (string) file_get_contents($path) : null;
+}
+
+$adminCss = readProjectFile('admin/assets/css/admin.css');
+
+if ($adminCss === null) {
+    check('فایل admin.css', 'fail', 'یافت نشد',
+        'admin/assets/css/admin.css روی سرور نیست');
+} else {
+    $cssVersion = preg_match('/--fardcms-css:\s*["\']([\d.]+)["\']/', $adminCss, $m)
+        ? $m[1] : '';
+    $matches = $cssVersion !== '' && $cssVersion === $expected;
+
+    check('نسخه فایل admin.css', $matches ? 'ok' : 'fail',
+        $cssVersion !== '' ? $cssVersion : 'بدون شناسه نسخه',
+        $matches ? '' : "این فایل قدیمی است؛ نسخه $expected را دوباره آپلود کنید");
+
+    check('تاریخ آخرین تغییر admin.css', 'info',
+        date('Y-m-d H:i', (int) filemtime(__DIR__ . '/admin/assets/css/admin.css'))
+        . '  ·  ' . number_format(strlen($adminCss)) . ' بایت');
+}
+
+// مهر نسخه‌ی داخل صفحه‌های HTML ایستا باید با نسخه کد یکی باشد؛ اگر
+// نباشد یعنی آن فایل آپلود نشده و مرورگر همچنان استایل قدیمی را می‌خواهد.
+foreach (['admin/index.html', 'login.html', 'register.html',
+          'forgot-password.html', 'reset-password.html'] as $htmlFile) {
+    $html = readProjectFile($htmlFile);
+
+    if ($html === null) {
+        check("فایل $htmlFile", 'warn', 'یافت نشد');
+        continue;
+    }
+
+    preg_match_all('/\?v=([\d.]+)/', $html, $stamps);
+    $found = array_values(array_unique($stamps[1]));
+    $stale = array_filter($found, fn($v) => $v !== $expected);
+
+    check("مهر نسخه در $htmlFile", empty($stale) ? 'ok' : 'fail',
+        empty($found) ? 'بدون مهر نسخه' : implode('، ', $found),
+        empty($stale) ? '' : "این فایل قدیمی است؛ نسخه $expected را دوباره آپلود کنید");
+}
+
+renderReport();
     exit;
 }
 
@@ -226,7 +286,7 @@ renderReport();
 // ═══════════════════════════════════════════════════════════
 function renderReport(): void
 {
-    global $rows, $problems, $detectedUrl, $pretty;
+    global $rows, $problems, $detectedUrl, $pretty, $expected;
 
     $base = $detectedUrl ?? '';
     $okCount = count(array_filter($rows, fn($r) => $r['state'] === 'ok'));
@@ -318,6 +378,9 @@ function renderReport(): void
     <tr><td class="st" data-cell="query-state">…</td>
         <td class="lbl">نشانی پرسمانی</td>
         <td class="val" data-cell="query-value">در حال بررسی…</td></tr>
+    <tr><td class="st" data-cell="css-state">…</td>
+        <td class="lbl">استایل پنل که مرورگر شما می‌گیرد</td>
+        <td class="val" data-cell="css-value">در حال بررسی…</td></tr>
   </table>
   <div id="verdict"></div>
 
@@ -348,6 +411,7 @@ function renderReport(): void
 <script>
   const BASE = <?= json_encode($base, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
   const MARKER = 'FARDCMS_ROUTING_OK';
+  const VERSION = <?= json_encode($expected, JSON_UNESCAPED_SLASHES) ?>;
 
   function set(name, state, value) {
     const st = document.querySelector(`[data-cell="${name}-state"]`);
@@ -369,7 +433,31 @@ function renderReport(): void
     }
   }
 
+  /**
+   * استایل پنل را دقیقاً همان‌طور که خود پنل می‌خواهد می‌گیرد.
+   * اگر فایل روی دیسک تازه باشد ولی این آزمون نسخه قدیمی برگرداند،
+   * مقصر کش مرورگر یا CDN است، نه آپلود.
+   */
+  async function probeCss() {
+    try {
+      const res = await fetch(`${BASE}/admin/assets/css/admin.css?v=${VERSION}`,
+                              { credentials: 'same-origin' });
+      const text = await res.text();
+      const m = text.match(/--fardcms-css:\s*["']([\d.]+)["']/);
+
+      return { ok: !!m && m[1] === VERSION, got: m ? m[1] : '' };
+    } catch (e) {
+      return { ok: false, got: '' };
+    }
+  }
+
   (async () => {
+    const css = await probeCss();
+    set('css', css.ok ? 'ok' : 'fail',
+        css.ok ? `نسخه ${VERSION} — تازه است`
+               : (css.got ? `نسخه ${css.got} می‌رسد، ولی باید ${VERSION} باشد — کش مرورگر یا CDN`
+                          : 'فایل استایل خوانده نشد'));
+
     const pretty = await probe(`${BASE}/__fardcms_probe`);
     set('pretty', pretty.ok ? 'ok' : 'fail',
         pretty.ok ? 'کار می‌کند' : `کار نمی‌کند (کد ${pretty.status})`);

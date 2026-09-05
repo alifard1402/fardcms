@@ -71,6 +71,12 @@ server {
         access_log off;
     }
 
+    # صفحه‌های HTML ایستا مهر نسخه‌ی فایل‌های ظاهری را در خود دارند؛
+    # اگر خودشان کش شوند، به‌روزرسانی ظاهری به کاربر نمی‌رسد.
+    location ~* \.html$ {
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
     # ─── فشرده‌سازی ────────────────────────────────────────
     gzip on;
     gzip_vary on;

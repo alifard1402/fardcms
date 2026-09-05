@@ -3,14 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- بعضی هاست‌ها mod_expires یا mod_headers ندارند و مرورگر این صفحه را
+       حدسی کش می‌کند؛ در آن حالت مهر نسخه‌ی ?v=1.0.5 هم قدیمی می‌ماند و
+       به‌روزرسانی ظاهری هرگز به کاربر نمی‌رسد. -->
+  <meta http-equiv="cache-control" content="no-cache">
   <meta name="robots" content="noindex, nofollow">
   <title>پنل مدیریت — فرد سی‌ام‌اس</title>
 
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
-  <link rel="stylesheet" href="../assets/css/fonts.css?v=1.0.4">
-  <link rel="stylesheet" href="assets/css/admin.css?v=1.0.4">
+  <link rel="stylesheet" href="../assets/css/fonts.css?v=1.0.5">
+  <link rel="stylesheet" href="assets/css/admin.css?v=1.0.5">
 
-  <script src="../assets/vendor/vue.global.prod.js?v=1.0.4"></script>
+  <script src="../assets/vendor/vue.global.prod.js?v=1.0.5"></script>
 </head>
 <body>
   <div id="app">
@@ -31,6 +35,6 @@
     </div>
   </noscript>
 
-  <script type="module" src="assets/js/app.js?v=1.0.4"></script>
+  <script type="module" src="assets/js/app.js?v=1.0.5"></script>
 </body>
 </html>

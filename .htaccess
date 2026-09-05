@@ -87,6 +87,14 @@
     <FilesMatch "\.js$">
         Header set Cache-Control "no-cache, must-revalidate"
     </FilesMatch>
+
+    # صفحه‌های HTML ایستا (پنل و صفحه‌های ورود) مهر نسخه‌ی فایل‌های ظاهری
+    # را در خود دارند. اگر خودشان کش شوند، مهر نسخه هم قدیمی می‌ماند و
+    # به‌روزرسانی به کاربر نمی‌رسد. mod_expires همین را تنظیم می‌کند، ولی
+    # روی هاست‌هایی که آن ماژول را ندارند این قاعده جایگزین آن می‌شود.
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
 </IfModule>
 
 # ─── صفحه‌های خطا ──────────────────────────────────────────

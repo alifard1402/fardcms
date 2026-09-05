@@ -23,6 +23,56 @@ import { SettingsView } from './views/settings.js';
 import { ProfileView } from './views/profile.js';
 import { ActivityView } from './views/activity.js';
 
+/**
+ * نسخه‌ای که این کد انتظار دارد در admin.css ببیند.
+ *
+ * فایل استایل مقدار --fardcms-css را تعریف می‌کند. اگر مرورگر یا CDN
+ * نسخه قدیمی CSS را نگه داشته باشد، مهر نسخه‌ی ?v= داخل index.html هم
+ * ممکن است قدیمی مانده باشد و اصلاح‌های ظاهری هرگز به کاربر نرسند —
+ * کاربری که فایل‌ها را درست هم آپلود کرده باشد گمان می‌کند اشکال باقی
+ * است. ماژول‌های js همیشه بازبینی می‌شوند، پس این بررسی اینجا انجام
+ * می‌شود تا خودِ پنل بتواند استایل تازه را دوباره بگیرد.
+ */
+const EXPECTED_CSS_VERSION = '1.0.5';
+
+/** مقدار --fardcms-css از استایلِ اعمال‌شده فعلی */
+function loadedCssVersion() {
+    return getComputedStyle(document.documentElement)
+        .getPropertyValue('--fardcms-css')
+        .trim()
+        .replace(/^["']|["']$/g, '');
+}
+
+/** در صورت قدیمی بودن استایل، یک بار آن را با آدرس تازه دوباره می‌گیرد */
+function ensureFreshStylesheet() {
+    if (loadedCssVersion() === EXPECTED_CSS_VERSION) return;
+
+    const link = document.querySelector('link[rel="stylesheet"][href*="admin.css"]');
+    if (!link) return;
+
+    const url = new URL(link.getAttribute('href'), location.href);
+    url.searchParams.set('v', EXPECTED_CSS_VERSION);
+    url.searchParams.set('cb', Date.now().toString(36)); // عبور از کشِ نشانی‌دار
+
+    const fresh = document.createElement('link');
+    fresh.rel = 'stylesheet';
+    fresh.href = url.href;
+    fresh.addEventListener('load', () => {
+        link.remove();
+        if (loadedCssVersion() !== EXPECTED_CSS_VERSION) {
+            console.warn(
+                '[فرد سی‌ام‌اس] فایل admin/assets/css/admin.css روی سرور قدیمی است. ' +
+                'نسخه موردانتظار ' + EXPECTED_CSS_VERSION + '، نسخه موجود «' +
+                (loadedCssVersion() || 'نامشخص') + '». فایل‌های نسخه تازه را دوباره آپلود کنید.'
+            );
+        }
+    });
+    fresh.addEventListener('error', () => fresh.remove());
+    document.head.appendChild(fresh);
+}
+
+ensureFreshStylesheet();
+
 const { createApp, ref, computed, onMounted, watch } = Vue;
 
 /** نگاشت نام نما به کامپوننت */

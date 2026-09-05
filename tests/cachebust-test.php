@@ -71,6 +71,12 @@ foreach ($htmlFiles as $file) {
         }
     }
 
+    // خودِ صفحه هم نباید کش شود، وگرنه مهر نسخه داخلش قدیمی می‌ماند
+    preg_match('/http-equiv=["\']cache-control["\'][^>]*content=["\']([^"\']+)/i', $html, $meta)
+        && str_contains(strtolower($meta[1]), 'no-cache')
+        ? ok("$file — meta no-cache دارد")
+        : bad($file, 'meta http-equiv=cache-control با no-cache ندارد');
+
     if (empty($matches)) {
         bad($file, 'هیچ ارجاع css/js پیدا نشد');
     } elseif (!empty($unstamped)) {
@@ -109,6 +115,28 @@ foreach ($unstampedExpected as $label => $url) {
         : bad("$label نباید مهر بخورد", $url);
 }
 
+echo "\n═══ خودترمیمی استایل پنل ═══\n";
+// اگر مرورگر یا CDN نسخه قدیمی admin.css را نگه دارد، app.js آن را
+// تشخیص می‌دهد و دوباره می‌گیرد. این کار فقط وقتی درست است که شناسه
+// داخل CSS و نسخه‌ای که app.js انتظار دارد با نسخه کد یکی باشند.
+$adminCss = (string) @file_get_contents(dirname(__DIR__) . '/admin/assets/css/admin.css');
+$appJs    = (string) @file_get_contents(dirname(__DIR__) . '/admin/assets/js/app.js');
+
+preg_match('/--fardcms-css:\s*["\']([\d.]+)["\']/', $adminCss, $cssV);
+preg_match('/EXPECTED_CSS_VERSION\s*=\s*[\'"]([\d.]+)[\'"]/', $appJs, $jsV);
+
+($cssV[1] ?? '') === $version
+    ? ok("شناسه --fardcms-css در admin.css برابر $version است")
+    : bad('admin.css', 'شناسه نسخه: ' . ($cssV[1] ?? 'ندارد'));
+
+($jsV[1] ?? '') === $version
+    ? ok("EXPECTED_CSS_VERSION در app.js برابر $version است")
+    : bad('app.js', 'نسخه موردانتظار: ' . ($jsV[1] ?? 'ندارد'));
+
+str_contains($appJs, 'ensureFreshStylesheet()')
+    ? ok('app.js استایل کهنه را دوباره می‌گیرد')
+    : bad('app.js', 'فراخوانی ensureFreshStylesheet وجود ندارد');
+
 echo "\n═══ قواعد کش سرور ═══\n";
 
 $htaccess = (string) @file_get_contents(dirname(__DIR__) . '/.htaccess');
@@ -117,11 +145,19 @@ str_contains($htaccess, 'no-cache, must-revalidate')
     ? ok('ماژول‌های js در .htaccess بازبینی می‌شوند')
     : bad('.htaccess', 'قاعده بازبینی js وجود ندارد');
 
+preg_match('/FilesMatch\s+"\\\\\.html\$"/', $htaccess)
+    ? ok('صفحه‌های html در .htaccess بازبینی می‌شوند')
+    : bad('.htaccess', 'قاعده بازبینی html وجود ندارد');
+
 $nginx = (string) @file_get_contents(dirname(__DIR__) . '/nginx.conf.example');
 
 str_contains($nginx, 'no-cache, must-revalidate')
     ? ok('ماژول‌های js در نمونه nginx بازبینی می‌شوند')
     : bad('nginx.conf.example', 'قاعده بازبینی js وجود ندارد');
+
+str_contains($nginx, '\\.html$')
+    ? ok('صفحه‌های html در نمونه nginx بازبینی می‌شوند')
+    : bad('nginx.conf.example', 'قاعده بازبینی html وجود ندارد');
 
 echo "\n════ PASS: $pass  FAIL: $fail ════\n";
 
