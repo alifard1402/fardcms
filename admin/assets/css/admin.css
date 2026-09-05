@@ -76,7 +76,12 @@
 /* ─── پایه ───────────────────────────────────────────────── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scrollbar-gutter: stable; }
+/* جای اسکرول‌بار فقط روی صفحه‌های بزرگ رزرو می‌شود. روی موبایل اسکرول‌بار
+   دائمی وجود ندارد و این فاصله باعث می‌شد نوار کناری «ثابت» چند پیکسل
+   داخل صفحه بماند و لبه‌اش دیده شود. */
+@media (min-width: 861px) {
+  html { scrollbar-gutter: stable; }
+}
 
 body {
   font-family: Vazirmatn, -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
@@ -134,7 +139,9 @@ svg { flex-shrink: 0; }
   display: flex;
   flex-direction: column;
   background: var(--bg-elevated);
-  border-inline-start: 1px solid var(--border);
+  /* خط جداکننده باید بین نوار کناری و محتوا باشد؛ در حالت راست‌به‌چپ
+     این یعنی لبه inline-end (سمت چپ نوار)، نه لبه بیرونی صفحه */
+  border-inline-end: 1px solid var(--border);
   overflow: hidden;
   transition: width 0.3s var(--ease);
 }
@@ -1238,18 +1245,33 @@ html[dir="rtl"] .menu-children { padding: 0 26px 7px 14px; }
 
 @media (max-width: 860px) {
   .admin-layout, .admin-layout.sidebar-collapsed { grid-template-columns: 1fr; }
+  /* نوار کناری کشویی موبایل
+     اینجا عمداً از inset-inline-* استفاده نشده است: در حالت راست‌به‌چپ
+     inset-inline-end یعنی «چپ»، اما transform از جهت متن پیروی نمی‌کند و
+     translateX(100%) همیشه به راست جابه‌جا می‌کند. ترکیب این دو باعث
+     می‌شد نوار به‌جای پنهان شدن، وسط صفحه گیر کند. پس لبه و جهت پنهان‌شدن
+     هر دو به‌صورت فیزیکی و هماهنگ نوشته شده‌اند. */
   .sidebar {
     position: fixed;
     inset-block: 0;
-    inset-inline-end: 0;
+    right: 0;
+    left: auto;
     width: var(--sidebar-width);
+    max-width: 86vw;
     z-index: 90;
     transform: translateX(100%);
-    transition: transform 0.3s var(--ease);
+    /* visibility علاوه بر پنهان کردن کامل (حتی اگر چند پیکسل جابه‌جایی
+       بماند)، پیوندهای نوار بسته را از ترتیب Tab و از دید صفحه‌خوان هم
+       خارج می‌کند */
+    visibility: hidden;
+    transition: transform 0.3s var(--ease), visibility 0.3s;
     box-shadow: var(--shadow-lg);
   }
-  html[dir="rtl"] .sidebar { transform: translateX(100%); }
-  .sidebar.mobile-open { transform: translateX(0); }
+  .sidebar.mobile-open { transform: translateX(0); visibility: visible; }
+
+  /* اگر روزی پنل چپ‌به‌راست شود، لبه و جهت با هم برعکس می‌شوند */
+  html[dir="ltr"] .sidebar { right: auto; left: 0; transform: translateX(-100%); }
+  html[dir="ltr"] .sidebar.mobile-open { transform: translateX(0); visibility: visible; }
   .sidebar-collapsed .brand-text,
   .sidebar-collapsed .nav-label,
   .sidebar-collapsed .nav-badge,

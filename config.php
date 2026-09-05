@@ -61,7 +61,6 @@ if (DEBUG_MODE) {
 }
 
 // ─── بارگذاری خودکار includes ──────────────────────────────
-require_once INCLUDES_PATH . '/version.php';
 require_once INCLUDES_PATH . '/db.php';
 require_once INCLUDES_PATH . '/helpers.php';
 require_once INCLUDES_PATH . '/sanitizer.php';

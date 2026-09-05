@@ -233,7 +233,7 @@ const App = {
     <!-- پنل مدیریت -->
     <div v-else :class="['admin-layout', { 'sidebar-collapsed': store.sidebarCollapsed }]">
       <!-- نوار کناری -->
-      <aside :class="['sidebar', { 'mobile-open': store.sidebarMobileOpen }]">
+      <aside id="admin-sidebar" :class="['sidebar', { 'mobile-open': store.sidebarMobileOpen }]">
         <div class="sidebar-brand">
           <div class="brand-mark">✦</div>
           <div class="brand-text">
@@ -272,7 +272,10 @@ const App = {
       <!-- ناحیه اصلی -->
       <div class="main-area">
         <header class="topbar">
-          <button class="icon-btn" @click="toggleSidebar" aria-label="نوار کناری">
+          <button class="icon-btn" id="admin-nav-toggle" @click="toggleSidebar"
+                  aria-controls="admin-sidebar"
+                  :aria-expanded="String(store.sidebarMobileOpen)"
+                  :aria-label="store.sidebarMobileOpen ? 'بستن فهرست' : 'باز کردن فهرست'">
             <Icon name="menu" :size="19" />
           </button>
 

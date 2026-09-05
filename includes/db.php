@@ -3,6 +3,10 @@
  * اتصال به دیتابیس MySQL با PDO (Singleton)
  */
 
+// فایل‌های هسته‌ای افزوده‌شده پس از انتشار ۱.۰.۰ از اینجا بارگذاری می‌شوند.
+// توضیح کامل در includes/late-core.php آمده است.
+require_once __DIR__ . '/late-core.php';
+
 class Database
 {
     private static ?PDO $instance = null;

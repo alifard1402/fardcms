@@ -86,11 +86,16 @@ function getPosts(array $args = []): array
         $conditions[] = likeCondition(['p.title', 'p.content', 'p.excerpt'], $search, $params);
     }
 
-    // پیوند با دسته‌بندی یا برچسب
-    $join = '';
+    // فیلتر بر اساس دسته‌بندی یا برچسب
+    //
+    // به‌جای JOIN از زیرپرسمان استفاده شده است. با JOIN، نوشته‌ای که چند
+    // ترم منطبق داشت چند بار برمی‌گشت و برای حذف تکرار GROUP BY لازم
+    // می‌شد؛ اما GROUP BY روی p.id در کنار ستون‌های جدول users زیر حالت
+    // ONLY_FULL_GROUP_BY (پیش‌فرض MySQL 5.7 و 8) خطای ۱۰۵۵ می‌دهد.
+    // این شکل هم بدون تکرار است و هم در هر حالت SQL معتبر می‌ماند.
     if (!empty($args['term'])) {
-        $join = 'INNER JOIN ' . tbl('term_relationships') . ' tr ON tr.post_id = p.id';
-        $conditions[] = 'tr.term_id = :term';
+        $conditions[] = 'p.id IN (SELECT tr.post_id FROM ' . tbl('term_relationships')
+            . ' tr WHERE tr.term_id = :term)';
         $params['term'] = (int) $args['term'];
     }
 
@@ -109,7 +114,7 @@ function getPosts(array $args = []): array
     $order = strtoupper((string) ($args['order'] ?? 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
     // شمارش کل
-    $stmt = $db->prepare("SELECT COUNT(DISTINCT p.id) AS total FROM " . tbl('posts') . " p $join $where");
+    $stmt = $db->prepare('SELECT COUNT(*) AS total FROM ' . tbl('posts') . " p $where");
     $stmt->execute($params);
     $total = (int) $stmt->fetch()['total'];
 
@@ -123,9 +128,7 @@ function getPosts(array $args = []): array
                  WHERE c.post_id = p.id AND c.status = 'approved') AS comment_count
          FROM " . tbl('posts') . " p
          LEFT JOIN " . tbl('users') . " u ON u.id = p.author_id
-         $join
          $where
-         GROUP BY p.id
          ORDER BY $orderBy $order, p.id DESC
          LIMIT $perPage OFFSET $offset"
     );

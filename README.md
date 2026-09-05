@@ -164,6 +164,7 @@ fardcms/
 │
 ├── includes/               هسته سیستم
 │   ├── db.php              اتصال PDO و وضعیت نصب
+│   ├── late-core.php       بارگذاری فایل‌های هسته‌ای افزوده‌شده پس از ۱.۰.۰
 │   ├── schema.php          تعریف ۱۳ جدول (تنها منبع ساختار)
 │   ├── helpers.php         تاریخ شمسی، نامک فارسی، توابع کمکی
 │   ├── sanitizer.php       پاک‌سازی HTML با DOM و فهرست سفید
@@ -199,7 +200,7 @@ fardcms/
 ├── assets/                 قلم، Vue و استایل صفحه‌های ورود
 ├── uploads/                فایل‌های کاربران
 ├── storage/                قفل نصب، کش، گزارش ایمیل
-└── tests/                  ۲۶۳ تست
+└── tests/                  ۳۰۳ تست
 ```
 
 ## نقش‌ها و دسترسی‌ها
@@ -267,6 +268,9 @@ php tests/sanitizer-test.php   # ۶۲ مورد پاک‌سازی HTML
 php tests/security-test.php    # ۳۸ بررسی امنیتی
 bash tests/api-test.sh         # ۶۴ تست API
 bash tests/routing-test.sh     # ۳۰ تست مسیریابی در هر دو حالت نشانی
+php tests/sqlmode-test.php     # ۳۶ تست سازگاری با ONLY_FULL_GROUP_BY
+bash tests/upgrade-test.sh     # سازگاری با config.php نسخه‌های قدیمی
+node tests/mobile-test.mjs     # پنل مدیریت روی موبایل
 node tests/site-test.mjs       # ۳۴ تست مرورگر سایت
 node tests/admin-test.mjs      # ۳۵ تست مرورگر پنل
 ```
