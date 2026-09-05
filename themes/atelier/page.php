@@ -9,7 +9,9 @@ $comments = (array) view('comments', []);
 $commentCount = (int) view('comment_count', 0);
 $commentsOpen = $post['comment_status'] === 'open' && getOption('allow_comments', true);
 $cover = postThumbnail($post);
-$gallery = postGallery((int) $post['id']);
+// از صافی گرفته می‌شود، نه با صدا زدن مستقیم افزونه: اگر افزونه
+// گالری نصب یا فعال نباشد، آرایه خالی برمی‌گردد و قالب نمی‌شکند
+$gallery = applyFilters('post_gallery', [], (int) $post['id']);
 
 setView(['has_hero' => $cover !== '']);
 themePart('header');

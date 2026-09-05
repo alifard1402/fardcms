@@ -16,5 +16,8 @@
     "search": "نتایج جستجو",
     "404": "صفحه یافت نشد",
     "maintenance": "حالت تعمیر و نگهداری"
-  }
+  },
+  "requires_plugins": [
+    "gallery"
+  ]
 }

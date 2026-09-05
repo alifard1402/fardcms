@@ -12,6 +12,14 @@
 
 require dirname(__DIR__) . '/config.php';
 
+// فیلدهای گالری و ویدیو متعلق به افزونه‌اند: بدون بارگذاری افزونه‌ها،
+// صافی post_meta_input وجود ندارد و meta ذخیره نمی‌شود
+if (!in_array('gallery', activePlugins(), true)) {
+    setOption('active_plugins', array_merge(activePlugins(), ['gallery']));
+}
+
+loadPlugins();
+
 const FIXTURE_SLUG = 'atelier-test-fixture';
 const FIXTURE_DIR  = 'atelier-test';
 

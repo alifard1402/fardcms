@@ -28,4 +28,7 @@ jsonSuccess([
         allRoles()
     ),
     'settings'      => getPublicSettings(),
+    // اسکریپت پنلِ افزونه‌های فعال؛ پنل آن‌ها را پیش از راه‌اندازی
+    // مسیریاب بارگذاری می‌کند
+    'plugin_scripts' => canAccessAdmin() ? pluginAdminScripts() : [],
 ]);

@@ -68,7 +68,19 @@ function installedThemes(): array
             }
         }
 
+        $required = array_values(array_filter(
+            array_map('strval', (array) ($meta['requires_plugins'] ?? [])),
+            fn($name) => preg_match('/^[a-z0-9_-]+$/i', $name) === 1
+        ));
+
+        $missing = array_values(array_filter(
+            $required,
+            fn($name) => !in_array($name, activePlugins(), true)
+        ));
+
         $themes[] = [
+            'requires_plugins' => $required,
+            'missing_plugins'  => $missing,
             'slug'        => $slug,
             'name'        => (string) ($meta['name'] ?? $slug),
             'description' => (string) ($meta['description'] ?? ''),
@@ -82,6 +94,22 @@ function installedThemes(): array
         : ($b['slug'] === 'default' ? 1 : strcmp($a['name'], $b['name'])));
 
     return $themes;
+}
+
+/**
+ * فعال کردن یک قالب
+ *
+ * @return array{success:bool, message:string}
+ */
+function activateThemeBySlug(string $slug): array
+{
+    if (!themeExists($slug)) {
+        return ['success' => false, 'message' => 'قالب یافت نشد'];
+    }
+
+    setOption('active_theme', $slug);
+
+    return ['success' => true, 'message' => 'قالب فعال شد'];
 }
 
 /**

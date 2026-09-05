@@ -20,8 +20,10 @@ $commentsOpen = $post['comment_status'] === 'open' && getOption('allow_comments'
 $meta = getAllPostMeta($postId);
 $subtitle = (string) ($meta['subtitle'] ?? '');
 $location = (string) ($meta['shoot_location'] ?? '');
-$gallery = postGallery($postId);
-$video = postVideo($postId);
+// از صافی گرفته می‌شود، نه با صدا زدن مستقیم افزونه: اگر افزونه
+// گالری نصب یا فعال نباشد، خالی برمی‌گردد و قالب نمی‌شکند
+$gallery = applyFilters('post_gallery', [], $postId);
+$video = applyFilters('post_video', null, $postId);
 $cover = postThumbnail($post);
 
 setView(['has_hero' => $cover !== '']);

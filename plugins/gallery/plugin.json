@@ -1,0 +1,9 @@
+{
+  "name": "گالری و ویدیو",
+  "slug": "gallery",
+  "version": "1.0.0",
+  "description": "گالری تصویر برای نوشته‌ها و برگه‌ها، به‌همراه پخش ویدیو از آپارات یا فایل آپلودشده. قالب‌ها با صافی‌های post_gallery و post_video به آن وصل می‌شوند.",
+  "author": "FardCMS",
+  "main": "gallery.php",
+  "requires": "1.1.0"
+}

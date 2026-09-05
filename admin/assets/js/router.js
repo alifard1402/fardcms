@@ -32,6 +32,7 @@ const routes = [
   { pattern: '/media',           view: 'media',      title: 'کتابخانه رسانه',   cap: 'upload_files' },
   { pattern: '/comments',        view: 'comments',   title: 'دیدگاه‌ها',        cap: 'moderate_comments' },
   { pattern: '/menus',           view: 'menus',      title: 'فهرست‌های ناوبری', cap: 'manage_menus' },
+  { pattern: '/extensions',      view: 'extensions', title: 'قالب‌ها و افزونه‌ها', cap: 'manage_settings' },
   { pattern: '/users',           view: 'users',      title: 'کاربران',          cap: 'manage_users' },
   { pattern: '/settings',        view: 'settings',   title: 'تنظیمات',          cap: 'manage_settings' },
   { pattern: '/activity',        view: 'activity',   title: 'گزارش فعالیت‌ها',  cap: 'view_activity' },

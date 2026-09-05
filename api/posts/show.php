@@ -27,8 +27,8 @@ if (!canEditPost($post)) {
 
 $post['meta'] = getAllPostMeta($id);
 
-// تصویرهای گالری با اطلاعات کامل برمی‌گردند تا ویرایشگر بتواند بدون
-// درخواست دوم پیش‌نمایششان را نشان دهد؛ در ذخیره فقط شناسه‌ها می‌روند.
-$post['gallery'] = postGallery($id);
+// افزونه‌ها می‌توانند داده آماده‌ی خود را به پاسخ اضافه کنند تا ویرایشگر
+// برای نمایششان درخواست دومی نفرستد
+$post = applyFilters('post_edit_payload', $post, $id);
 
 jsonSuccess(['post' => $post]);

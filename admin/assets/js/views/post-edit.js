@@ -5,12 +5,12 @@
 import { Icon } from '../icons.js';
 import { LoadingBlock, Checkbox, Switch, TagInput, ConfirmDialog } from '../components/ui.js';
 import { ContentEditor } from '../components/editor.js';
-import { FeaturedImagePicker, MediaPicker } from '../components/media-picker.js';
+import { FeaturedImagePicker } from '../components/media-picker.js';
 import { api } from '../api.js';
 import { can, notify, notifyError } from '../store.js';
 import { navigate } from '../router.js';
 
-const { ref, computed, watch, onMounted, onBeforeUnmount } = Vue;
+const { ref, reactive, computed, watch, onMounted, onBeforeUnmount } = Vue;
 
 export const PostEditView = {
   name: 'PostEditView',
@@ -38,19 +38,23 @@ export const PostEditView = {
       published_at: '',
       categories: [],
       tags: [],
-      // فیلدهای سفارشی؛ قالب‌هایی مثل قالب آتلیه از این‌ها استفاده می‌کنند
-      subtitle: '',
-      shoot_location: '',
-      video_provider: '',
-      video_aparat: '',
-      video_file: '',
-      video_poster: '',
     });
 
-    // گالری با شیء کامل رسانه نگه داشته می‌شود تا پیش‌نمایش داشته باشیم؛
-    // هنگام ذخیره فقط شناسه‌ها فرستاده می‌شوند.
-    const gallery = ref([]);
-    const galleryPicker = ref(false);
+    // فیلدهای سفارشی متعلق به افزونه‌هاست؛ پنل فقط نگهشان می‌دارد و
+    // دست‌نخورده به سرور برمی‌گرداند. صافی post_meta_input تصمیم می‌گیرد
+    // کدامشان واقعاً ذخیره شوند.
+    const meta = reactive({});
+    const payload = ref({});
+
+    /** پنل‌هایی که افزونه‌های فعال ثبت کرده‌اند */
+    const pluginPanels = computed(() => (window.FardCMS?.editorPanels || [])
+      .filter((panel) => !panel.types || panel.types.includes(props.type)));
+
+    const panelContext = computed(() => ({
+      meta,
+      payload: payload.value,
+      type: props.type,
+    }));
 
     const categories = ref([]);
     const parentOptions = ref([]);
@@ -112,15 +116,11 @@ export const PostEditView = {
             published_at: post.published_at ? post.published_at.replace(' ', 'T').slice(0, 16) : '',
             categories: (post.categories || []).map((c) => c.id),
             tags: (post.tags || []).map((t) => t.name),
-            subtitle: post.meta?.subtitle || '',
-            shoot_location: post.meta?.shoot_location || '',
-            video_provider: post.meta?.video_provider || '',
-            video_aparat: post.meta?.video_aparat || '',
-            video_file: post.meta?.video_file || '',
-            video_poster: post.meta?.video_poster || '',
           };
 
-          gallery.value = post.gallery || [];
+          // فیلدهای سفارشی و داده‌ای که افزونه‌ها به پاسخ اضافه کرده‌اند
+          Object.assign(meta, post.meta || {});
+          payload.value = post;
 
           slugEdited.value = true;
         }
@@ -174,24 +174,14 @@ export const PostEditView = {
 
       saving.value = true;
 
-      const payload = { ...form.value, type: props.type };
-
-      payload.meta = {
-        gallery: gallery.value.map((item) => item.id),
-        subtitle: form.value.subtitle,
-        shoot_location: form.value.shoot_location,
-        video_provider: form.value.video_provider,
-        video_aparat: form.value.video_aparat,
-        video_file: form.value.video_file,
-        video_poster: form.value.video_poster,
-      };
+      const body = { ...form.value, type: props.type, meta: { ...meta } };
 
       if (statusOverride) {
-        payload.status = statusOverride;
+        body.status = statusOverride;
       }
 
       try {
-        const data = await api.posts.save(payload);
+        const data = await api.posts.save(body);
         const post = data.post;
 
         notify(isNew.value ? `${labels.value.one} ایجاد شد` : 'تغییرات ذخیره شد');
@@ -211,33 +201,6 @@ export const PostEditView = {
       } finally {
         saving.value = false;
       }
-    };
-
-    /* ─── گالری ────────────────────────────────────────────── */
-    const onGallerySelect = (items) => {
-      galleryPicker.value = false;
-
-      // تصویر تکراری دوباره اضافه نمی‌شود
-      const existing = new Set(gallery.value.map((item) => item.id));
-
-      gallery.value = gallery.value.concat(items.filter((item) => !existing.has(item.id)));
-      dirty.value = true;
-    };
-
-    const removeFromGallery = (index) => {
-      gallery.value.splice(index, 1);
-      dirty.value = true;
-    };
-
-    /** جابه‌جایی یک تصویر در ترتیب گالری */
-    const moveInGallery = (index, step) => {
-      const target = index + step;
-
-      if (target < 0 || target >= gallery.value.length) return;
-
-      const [item] = gallery.value.splice(index, 1);
-      gallery.value.splice(target, 0, item);
-      dirty.value = true;
     };
 
     /** بازگشت به فهرست با هشدار در صورت تغییرات ذخیره‌نشده */
@@ -294,7 +257,7 @@ export const PostEditView = {
     return {
       form, categories, parentOptions, loading, saving, dirty, errors,
       confirmLeave, isNew, isPage, labels, publicUrl, statusOptions, slugEdited,
-      gallery, galleryPicker, onGallerySelect, removeFromGallery, moveInGallery,
+      meta, pluginPanels, panelContext,
       save, goBack, suggestSlug, toggleCategory, can, navigate,
     };
   },
@@ -373,27 +336,6 @@ export const PostEditView = {
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-header">
-                <span class="card-title">اطلاعات تکمیلی</span>
-                <span class="small faint">اختیاری — قالب‌هایی مثل قالب آتلیه این‌ها را نشان می‌دهند</span>
-              </div>
-              <div class="card-body">
-                <div class="form-grid">
-                  <div class="field mb-0">
-                    <label class="field-label">زیرعنوان</label>
-                    <input v-model="form.subtitle" type="text" class="input" maxlength="200"
-                           placeholder="مثلاً: عکاسی عروسی سارا و امیر">
-                  </div>
-
-                  <div class="field mb-0">
-                    <label class="field-label">محل عکاسی</label>
-                    <input v-model="form.shoot_location" type="text" class="input" maxlength="200"
-                           placeholder="مثلاً: باغ ارم، شیراز">
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- ستون کنار -->
@@ -428,77 +370,11 @@ export const PostEditView = {
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-header">
-                <span class="card-title">گالری تصاویر</span>
-                <span class="badge" v-if="gallery.length">{{ gallery.length }}</span>
-              </div>
+            <!-- پنل‌های افزونه‌ها؛ اگر افزونه‌ای نصب نباشد چیزی دیده نمی‌شود -->
+            <div class="card" v-for="panel in pluginPanels" :key="panel.id">
+              <div class="card-header"><span class="card-title">{{ panel.title }}</span></div>
               <div class="card-body">
-                <div v-if="gallery.length" class="gallery-thumbs">
-                  <div v-for="(item, index) in gallery" :key="item.id" class="gallery-thumb">
-                    <img :src="item.thumbnail_url || item.url" :alt="item.alt_text || ''" loading="lazy">
-                    <div class="gallery-thumb-bar">
-                      <button type="button" @click="moveInGallery(index, -1)"
-                              :disabled="index === 0" title="جابه‌جایی به عقب">
-                        <Icon name="chevronRight" :size="13" />
-                      </button>
-                      <button type="button" @click="removeFromGallery(index)" title="حذف از گالری">
-                        <Icon name="trash" :size="13" />
-                      </button>
-                      <button type="button" @click="moveInGallery(index, 1)"
-                              :disabled="index === gallery.length - 1" title="جابه‌جایی به جلو">
-                        <Icon name="chevronLeft" :size="13" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <button class="btn btn-ghost btn-block mt-sm" type="button" @click="galleryPicker = true">
-                  <Icon name="plus" :size="15" />
-                  افزودن تصویر
-                </button>
-
-                <div class="field-hint">
-                  ترتیب همین‌جا تعیین می‌شود و قالب سایت به همین ترتیب نمایش می‌دهد.
-                </div>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-header"><span class="card-title">ویدیو</span></div>
-              <div class="card-body">
-                <div class="field">
-                  <label class="field-label">محل نگهداری ویدیو</label>
-                  <select v-model="form.video_provider" class="select">
-                    <option value="">بدون ویدیو</option>
-                    <option value="aparat">آپارات</option>
-                    <option value="file">فایل آپلودشده</option>
-                  </select>
-                </div>
-
-                <div class="field" v-if="form.video_provider === 'aparat'">
-                  <label class="field-label">نشانی یا شناسه ویدیوی آپارات</label>
-                  <input v-model="form.video_aparat" type="text" class="input" dir="ltr"
-                         placeholder="https://www.aparat.com/v/XXXXX">
-                  <div class="field-hint">
-                    نشانی صفحه ویدیو را بچسبانید؛ شناسه‌اش خودکار بیرون کشیده می‌شود.
-                  </div>
-                </div>
-
-                <div class="field" v-if="form.video_provider === 'file'">
-                  <label class="field-label">نشانی فایل ویدیو</label>
-                  <input v-model="form.video_file" type="text" class="input" dir="ltr"
-                         placeholder="uploads/1404/06/clip.mp4">
-                  <div class="field-hint">
-                    از کتابخانه رسانه آپلود کنید و نشانی‌اش را اینجا بگذارید. برای فیلم‌های
-                    بلند آپارات مناسب‌تر است؛ هاست اشتراکی پهنای باند کمی دارد.
-                  </div>
-                </div>
-
-                <div class="field mb-0" v-if="form.video_provider">
-                  <label class="field-label">تصویر پیش‌نمایش ویدیو</label>
-                  <FeaturedImagePicker v-model="form.video_poster" />
-                </div>
+                <component :is="panel.component" :ctx="panelContext" />
               </div>
             </div>
 
@@ -563,9 +439,6 @@ export const PostEditView = {
           </div>
         </div>
       </template>
-
-      <MediaPicker v-if="galleryPicker" multiple images-only title="افزودن به گالری"
-                   @select="onGallerySelect" @close="galleryPicker = false" />
 
       <ConfirmDialog v-if="confirmLeave"
                      title="تغییرات ذخیره‌نشده"

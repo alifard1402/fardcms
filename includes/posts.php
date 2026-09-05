@@ -327,14 +327,19 @@ function savePost(array $data, ?int $id = null): array
 
         // فیلدهای سفارشی
         //
-        // فقط کلیدهای شناخته‌شده ذخیره می‌شوند: بدون این محدودیت، هر
-        // نویسنده‌ای می‌توانست با یک درخواست، کلیدهای دلخواه در جدول
-        // postmeta بنشاند.
+        // هسته هیچ فیلد سفارشی‌ای نمی‌شناسد؛ افزونه‌ها با صافی
+        // post_meta_input فیلدهای خودشان را پاک‌سازی و اضافه می‌کنند.
+        // بدون این محدودیت، هر نویسنده‌ای می‌توانست با یک درخواست،
+        // کلیدهای دلخواه در جدول postmeta بنشاند.
         if (!empty($data['meta']) && is_array($data['meta'])) {
-            foreach (sanitizePostMeta($data['meta']) as $key => $value) {
-                setPostMeta($id, $key, $value);
+            $meta = applyFilters('post_meta_input', [], $data['meta'], $id);
+
+            foreach ($meta as $key => $value) {
+                setPostMeta($id, (string) $key, $value);
             }
         }
+
+        doAction('post_saved', $id, $data);
 
         $db->commit();
     } catch (Throwable $e) {

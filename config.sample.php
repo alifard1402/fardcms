@@ -56,6 +56,7 @@ define('BASE_PATH', __DIR__);
 define('INCLUDES_PATH', BASE_PATH . '/includes');
 define('TEMPLATES_PATH', BASE_PATH . '/templates');
 define('THEMES_PATH', BASE_PATH . '/themes');
+define('PLUGINS_PATH', BASE_PATH . '/plugins');
 define('UPLOADS_PATH', BASE_PATH . '/uploads');
 define('STORAGE_PATH', BASE_PATH . '/storage');
 define('UPLOADS_URL', SITE_URL . '/uploads');

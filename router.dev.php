@@ -14,6 +14,13 @@
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $target = __DIR__ . urldecode($path);
 
+// معادل themes/.htaccess و plugins/.htaccess: کد قالب و افزونه فقط از
+// داخل سیستم اجرا می‌شود، نه با درخواست مستقیم
+if (preg_match('#^/(themes|plugins)/.+\.(php|phtml|inc)$#i', $path)) {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
 // نشانی‌های قدیمی صفحه‌های ورودی، معادل قاعده‌های .htaccess
 if (preg_match('#^/(login|register|forgot-password|reset-password)\.html$#', $path, $m)) {
     require __DIR__ . '/' . $m[1] . '.php';

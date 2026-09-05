@@ -157,6 +157,21 @@ await page.click('.nav-item:has-text("کاربران")');
 await page.waitForSelector('.table', { timeout: 8000 });
 chk('users table renders', (await page.locator('.table tbody tr').count()) >= 1);
 
+// ─── قالب‌ها و افزونه‌ها ───
+console.log('=== قالب‌ها و افزونه‌ها ===');
+await page.click('.nav-item:has-text("قالب‌ها و افزونه‌ها")');
+await page.waitForSelector('.theme-card', { timeout: 8000 });
+chk('theme list renders', (await page.locator('.theme-card').count()) >= 1);
+chk('active theme is marked', (await page.locator('.theme-card.active').count()) === 1);
+// نام از theme.json خوانده می‌شود، نه از نام پوشه
+chk('theme name from theme.json',
+    (await page.locator('.theme-name').allInnerTexts()).some(n => n.includes('قالب پیش‌فرض')));
+chk('zip upload box for admin', await page.locator('.dropzone').isVisible());
+
+await page.click('.status-filter:has-text("افزونه‌ها")');
+await page.waitForTimeout(400);
+chk('plugin list renders', (await page.locator('.simple-item').count()) >= 1);
+
 // ─── settings ───
 console.log('=== تنظیمات ===');
 await page.click('.nav-item:has-text("تنظیمات")');
@@ -164,18 +179,6 @@ await page.waitForSelector('.card-title:has-text("هویت سایت")', { timeou
 chk('settings form renders', await page.locator('.card-title:has-text("هویت سایت")').isVisible());
 chk('settings tabs render', (await page.locator('.status-filter').count()) >= 4);
 await page.screenshot({ path: 'shot-settings.png', fullPage: true });
-
-// ─── انتخاب قالب سایت ───
-// active_theme از ابتدا در دیتابیس بود ولی هیچ راهی برای عوض کردنش در
-// پنل وجود نداشت؛ کاربر باید بتواند قالب را از همین‌جا انتخاب کند.
-await page.click('.status-filter:has-text("قالب")');
-await page.waitForSelector('.theme-card', { timeout: 5000 });
-chk('theme picker lists installed themes', (await page.locator('.theme-card').count()) >= 1);
-chk('active theme is marked', (await page.locator('.theme-card.active').count()) === 1);
-// نام از theme.json خوانده می‌شود، نه از نام پوشه — به قالبِ فعال
-// وابسته نیست تا با عوض شدن آن، تست شکننده نشود
-chk('theme name shown from theme.json',
-    (await page.locator('.theme-name').allInnerTexts()).some(n => n.includes('قالب پیش‌فرض')));
 
 // ─── کلیدهای روشن/خاموش (رگرسیون: دستگیره نباید از ریل بیرون بزند) ───
 // در راست‌به‌چپ inset-inline-end یعنی «چپ» ولی translateX همیشه فیزیکی است؛

@@ -152,6 +152,21 @@ export const api = {
     save: (data) => post('settings/index.php', data),
   },
 
+  extensions: {
+    list:   () => get('extensions/index.php'),
+    action: (kind, slug, action) => post('extensions/action.php', { kind, slug, action }),
+    install: (kind, file, overwrite = false) => {
+      const form = new FormData();
+
+      form.append('kind', kind);
+      form.append('package', file);
+
+      if (overwrite) form.append('overwrite', '1');
+
+      return request('extensions/install.php', { method: 'POST', body: form, isFormData: true });
+    },
+  },
+
   menus: {
     list:   () => get('menus/index.php'),
     save:   (data) => post('menus/save.php', data),

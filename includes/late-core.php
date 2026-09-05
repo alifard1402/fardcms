@@ -19,7 +19,11 @@
  * انجام دهند، چون پیش از بقیه هسته بارگذاری می‌شوند.
  */
 
+// قلاب‌ها باید پیش از هر چیز دیگری تعریف شوند تا بقیه هسته بتواند
+// نقاط اتصال خود را اعلام کند
+require_once __DIR__ . '/hooks.php';
 require_once __DIR__ . '/version.php';
 require_once __DIR__ . '/sanitizer.php';
 require_once __DIR__ . '/asset-stamp.php';
-require_once __DIR__ . '/gallery.php';
+require_once __DIR__ . '/plugins.php';
+require_once __DIR__ . '/package.php';

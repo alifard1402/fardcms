@@ -1,10 +1,22 @@
 <?php
 /**
- * گالری تصویر و ویدیوی نوشته‌ها
+ * افزونه گالری و ویدیو
  *
- * این‌ها روی فیلدهای سفارشی (postmeta) سوار شده‌اند تا نیازی به جدول
- * تازه نباشد. گالری فقط «شناسه» رسانه‌ها را نگه می‌دارد و نه نشانی آن‌ها،
- * چون نشانی با تغییر دامنه یا انتقال هاست عوض می‌شود ولی شناسه نه.
+ * این فایل هیچ چیزی را در هسته تغییر نمی‌دهد؛ فقط روی قلاب‌ها می‌نشیند:
+ *
+ *   post_meta_input     فیلدهای گالری و ویدیو را پاک‌سازی و ذخیره می‌کند
+ *   post_edit_payload   تصویرهای گالری را با اطلاعات کامل به ویرایشگر می‌دهد
+ *   post_gallery        قالب‌ها گالری یک نوشته را از این صافی می‌گیرند
+ *   post_video          و ویدیوی آن را از این یکی
+ *
+ * قالبی که این افزونه را نداشته باشد آرایه خالی می‌گیرد و بی‌سروصدا
+ * چیزی نشان نمی‌دهد — نه خطای «تابع تعریف‌نشده».
+ */
+
+/*
+ * داده روی فیلدهای سفارشی (postmeta) سوار است تا نیازی به جدول تازه
+ * نباشد. گالری فقط «شناسه» رسانه‌ها را نگه می‌دارد و نه نشانی آن‌ها، چون
+ * نشانی با تغییر دامنه یا انتقال هاست عوض می‌شود ولی شناسه نه.
  *
  * ویدیو دو حالت دارد:
  *   aparat — روی سرور آپارات است و پهنای باند هاست را مصرف نمی‌کند
@@ -23,7 +35,7 @@
  *
  * @return array<string, string> کلید => نوع
  */
-function allowedPostMetaKeys(): array
+function galleryMetaKeys(): array
 {
     return [
         'gallery'        => 'ids',     // شناسه تصویرهای گالری
@@ -42,11 +54,11 @@ function allowedPostMetaKeys(): array
  * @param  array<string, mixed> $meta
  * @return array<string, mixed>
  */
-function sanitizePostMeta(array $meta): array
+function gallerySanitizeMeta(array $meta): array
 {
     $clean = [];
 
-    foreach (allowedPostMetaKeys() as $key => $type) {
+    foreach (galleryMetaKeys() as $key => $type) {
         if (!array_key_exists($key, $meta)) {
             continue;
         }
@@ -61,7 +73,7 @@ function sanitizePostMeta(array $meta): array
                 100
             )),
             'provider' => in_array($value, ['aparat', 'file'], true) ? $value : '',
-            'aparat'   => aparatVideoId((string) $value),
+            'aparat'   => galleryAparatId((string) $value),
             'url'      => filter_var(trim((string) $value), FILTER_VALIDATE_URL)
                           || str_starts_with(trim((string) $value), '/')
                               ? trim((string) $value) : '',
@@ -78,7 +90,7 @@ function sanitizePostMeta(array $meta): array
  * هم شناسه خام پذیرفته می‌شود و هم نشانی کامل صفحه یا کد امبد، چون کاربر
  * معمولاً همان چیزی را می‌چسباند که از آپارات کپی کرده است.
  */
-function aparatVideoId(string $input): string
+function galleryAparatId(string $input): string
 {
     $input = trim($input);
 
@@ -97,7 +109,7 @@ function aparatVideoId(string $input): string
 /**
  * نشانی پخش‌کننده آپارات
  */
-function aparatEmbedUrl(string $videoId): string
+function galleryAparatEmbed(string $videoId): string
 {
     return 'https://www.aparat.com/video/video/embed/videohash/'
          . rawurlencode($videoId) . '/vt/frame';
@@ -110,7 +122,7 @@ function aparatEmbedUrl(string $videoId): string
  *
  * @return array<int, array<string, mixed>>
  */
-function postGallery(int $postId): array
+function galleryImages(int $postId): array
 {
     $ids = getPostMeta($postId, 'gallery', []);
 
@@ -136,16 +148,16 @@ function postGallery(int $postId): array
  *
  * @return array{type:string, embed?:string, src?:string, poster:string}|null
  */
-function postVideo(int $postId): ?array
+function galleryVideo(int $postId): ?array
 {
     $provider = (string) getPostMeta($postId, 'video_provider', '');
     $poster = (string) getPostMeta($postId, 'video_poster', '');
 
     if ($provider === 'aparat') {
-        $id = aparatVideoId((string) getPostMeta($postId, 'video_aparat', ''));
+        $id = galleryAparatId((string) getPostMeta($postId, 'video_aparat', ''));
 
         return $id === '' ? null
-            : ['type' => 'aparat', 'embed' => aparatEmbedUrl($id), 'poster' => $poster];
+            : ['type' => 'aparat', 'embed' => galleryAparatEmbed($id), 'poster' => $poster];
     }
 
     if ($provider === 'file') {
@@ -156,3 +168,20 @@ function postVideo(int $postId): ?array
 
     return null;
 }
+
+// ─── اتصال به هسته ─────────────────────────────────────────
+
+addFilter('post_meta_input', function (array $meta, array $input): array {
+    return array_merge($meta, gallerySanitizeMeta($input));
+}, 10, 2);
+
+addFilter('post_edit_payload', function (array $post, int $id): array {
+    // تصویرها با اطلاعات کامل می‌روند تا ویرایشگر برای پیش‌نمایش
+    // درخواست دومی نفرستد؛ در ذخیره فقط شناسه‌ها برمی‌گردند
+    $post['gallery'] = galleryImages($id);
+
+    return $post;
+}, 10, 2);
+
+addFilter('post_gallery', fn(array $images, int $id): array => galleryImages($id), 10, 2);
+addFilter('post_video', fn(?array $video, int $id): ?array => galleryVideo($id), 10, 2);

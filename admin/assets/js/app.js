@@ -4,6 +4,7 @@
 
 import { Icon } from './icons.js';
 import { ToastStack } from './components/ui.js';
+import { MediaPicker } from './components/media-picker.js';
 import { api, setCsrfToken, ApiError } from './api.js';
 import {
   store, can, notify, notifyError, userInitials,
@@ -22,6 +23,7 @@ import { UsersView } from './views/users.js';
 import { SettingsView } from './views/settings.js';
 import { ProfileView } from './views/profile.js';
 import { ActivityView } from './views/activity.js';
+import { ExtensionsView } from './views/extensions.js';
 
 /**
  * نسخه‌ای که این کد انتظار دارد در admin.css ببیند.
@@ -33,7 +35,7 @@ import { ActivityView } from './views/activity.js';
  * است. ماژول‌های js همیشه بازبینی می‌شوند، پس این بررسی اینجا انجام
  * می‌شود تا خودِ پنل بتواند استایل تازه را دوباره بگیرد.
  */
-const EXPECTED_CSS_VERSION = '1.0.10';
+const EXPECTED_CSS_VERSION = '1.1.0';
 
 /** مقدار --fardcms-css از استایلِ اعمال‌شده فعلی */
 function loadedCssVersion() {
@@ -73,6 +75,57 @@ function ensureFreshStylesheet() {
 
 ensureFreshStylesheet();
 
+/**
+ * نقطه اتصال افزونه‌ها به پنل مدیریت
+ *
+ * افزونه فایل assets/admin.js خود را دارد که پیش از راه‌اندازی برنامه
+ * بارگذاری می‌شود و پنل‌های خودش را اینجا ثبت می‌کند. این‌طور برای
+ * افزودن قابلیت تازه، لازم نیست کد پنل دست بخورد.
+ *
+ * قرارداد یک پنل ویرایشگر:
+ *   { id, title, types?, component }
+ *   component یک کامپوننت Vue است که prop به نام ctx می‌گیرد:
+ *     ctx.meta    شیء واکنش‌گر فیلدهای سفارشی — مستقیم تغییرش بدهید
+ *     ctx.payload داده‌ای که افزونه در صافی post_edit_payload گذاشته
+ *     ctx.type    'post' یا 'page'
+ */
+window.FardCMS = window.FardCMS || {
+  editorPanels: [],
+
+  registerEditorPanel(panel) {
+    if (!panel || !panel.id || !panel.component) {
+      console.warn('[فرد سی‌ام‌اس] پنل ویرایشگر ناقص است', panel);
+      return;
+    }
+
+    if (this.editorPanels.some((item) => item.id === panel.id)) return;
+
+    this.editorPanels.push(panel);
+  },
+};
+
+/**
+ * بارگذاری اسکریپت پنلِ افزونه‌های فعال
+ *
+ * به‌صورت اسکریپت کلاسیک تزریق می‌شود و نه ماژول، تا افزونه‌نویس بتواند
+ * یک فایل ساده بنویسد و به Vue سراسری دسترسی داشته باشد. خطای یک افزونه
+ * نباید جلوی بالا آمدن پنل را بگیرد.
+ */
+async function loadPluginScripts(urls) {
+  await Promise.all((urls || []).map((url) => new Promise((resolve) => {
+    const tag = document.createElement('script');
+
+    tag.src = url;
+    tag.onload = resolve;
+    tag.onerror = () => {
+      console.warn('[فرد سی‌ام‌اس] بارگذاری اسکریپت افزونه ممکن نشد:', url);
+      resolve();
+    };
+
+    document.head.appendChild(tag);
+  })));
+}
+
 const { createApp, ref, computed, onMounted, watch } = Vue;
 
 /** نگاشت نام نما به کامپوننت */
@@ -88,6 +141,7 @@ const viewComponents = {
   settings:    SettingsView,
   profile:     ProfileView,
   activity:    ActivityView,
+  extensions:  ExtensionsView,
 };
 
 /** ساختار نوار کناری */
@@ -113,6 +167,7 @@ const navSections = [
     label: 'نمایش',
     items: [
       { route: '/menus', label: 'فهرست‌ها', icon: 'menu', cap: 'manage_menus' },
+      { route: '/extensions', label: 'قالب‌ها و افزونه‌ها', icon: 'image', cap: 'manage_settings' },
     ],
   },
   {
@@ -159,6 +214,10 @@ const App = {
         setCsrfToken(data.csrf_token);
 
         document.title = `پیشخوان — ${store.settings.site_title || 'فرد سی‌ام‌اس'}`;
+
+        // افزونه‌ها پیش از راه‌اندازی مسیریاب بارگذاری می‌شوند تا پنل‌های
+        // خود را ثبت کرده باشند و اولین صفحه هم کاملشان را نشان دهد
+        await loadPluginScripts(data.plugin_scripts);
       } catch (error) {
         // نشست منقضی یا خطای شبکه
         if (error instanceof ApiError && error.status === 401) {
@@ -395,4 +454,10 @@ const App = {
   `,
 };
 
-createApp(App).mount('#app');
+const app = createApp(App);
+
+// در اختیار افزونه‌ها: انتخابگر رسانه با نام سراسری، چون کد افزونه
+// اسکریپت کلاسیک است و نمی‌تواند ماژول‌های پنل را import کند
+app.component('fardcms-media-picker', MediaPicker);
+
+app.mount('#app');

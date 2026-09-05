@@ -8,6 +8,9 @@
 
 require_once dirname(__DIR__) . '/config.php';
 
+// افزونه‌های فعال باید پیش از پاسخ‌دهی نقاط پایانی روی قلاب‌ها بنشینند
+loadPlugins();
+
 // خطاهای مدیریت‌نشده باید پاسخ JSON بدهند، نه صفحه خطای HTML
 set_exception_handler(function (Throwable $e): void {
     error_log('Unhandled API exception: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());

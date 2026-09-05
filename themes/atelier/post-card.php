@@ -8,8 +8,10 @@
 $thumb = postThumbnail($post);
 $meta = getAllPostMeta((int) $post['id']);
 $subtitle = (string) ($meta['subtitle'] ?? '');
-$galleryCount = is_array($meta['gallery'] ?? null) ? count($meta['gallery']) : 0;
-$hasVideo = !empty($meta['video_provider']);
+// نشان‌های «گالری» و «ویدیو» فقط وقتی معنا دارند که افزونه گالری فعال
+// باشد؛ صافی در نبود افزونه خالی برمی‌گرداند
+$galleryCount = count(applyFilters('post_gallery', [], (int) $post['id']));
+$hasVideo = applyFilters('post_video', null, (int) $post['id']) !== null;
 // نشانی را خود هسته می‌سازد؛ ساختن دستی، حالت نشانی پرسمانی را می‌شکند
 $url = (string) ($post['url'] ?? routeUrl('blog/' . $post['slug']));
 ?>
