@@ -22,3 +22,4 @@
 require_once __DIR__ . '/version.php';
 require_once __DIR__ . '/sanitizer.php';
 require_once __DIR__ . '/asset-stamp.php';
+require_once __DIR__ . '/gallery.php';

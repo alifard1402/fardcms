@@ -8,7 +8,7 @@
    CDN نسخه قدیمی CSS را نگه داشته باشد، خودش فایل تازه را دوباره
    می‌گیرد. بدون این کار، به‌روزرسانی ظاهری تا پایان مدت کش به کاربر
    نمی‌رسید و کاربر گمان می‌کرد اصلاح انجام نشده است. */
-:root { --fardcms-css: "1.0.8"; }
+:root { --fardcms-css: "1.0.9"; }
 
 /* ─── متغیرهای پوسته تیره (پیش‌فرض) ─────────────────────── */
 :root {
@@ -570,6 +570,54 @@ svg { flex-shrink: 0; }
 .switch.on::after { transform: translateX(-18px); }
 html[dir="ltr"] .switch::after { right: auto; left: 3px; }
 html[dir="ltr"] .switch.on::after { transform: translateX(18px); }
+
+/* ─── گالری تصاویر نوشته ────────────────────────────────── */
+.gallery-thumbs {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+}
+.gallery-thumb {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-thumb-bar {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.62);
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.gallery-thumb:hover .gallery-thumb-bar,
+.gallery-thumb:focus-within .gallery-thumb-bar { opacity: 1; }
+.gallery-thumb-bar button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+.gallery-thumb-bar button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+.gallery-thumb-bar button:disabled { opacity: 0.35; cursor: default; }
+/* روی لمسی hover وجود ندارد، پس نوار همیشه دیده می‌شود */
+@media (hover: none) {
+  .gallery-thumb-bar { opacity: 1; }
+}
+.mt-sm { margin-top: 10px; }
 
 /* ─── انتخاب قالب سایت ─────────────────────────────────── */
 .theme-grid {

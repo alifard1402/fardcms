@@ -5,7 +5,7 @@
 import { Icon } from '../icons.js';
 import { LoadingBlock, Checkbox, Switch, TagInput, ConfirmDialog } from '../components/ui.js';
 import { ContentEditor } from '../components/editor.js';
-import { FeaturedImagePicker } from '../components/media-picker.js';
+import { FeaturedImagePicker, MediaPicker } from '../components/media-picker.js';
 import { api } from '../api.js';
 import { can, notify, notifyError } from '../store.js';
 import { navigate } from '../router.js';
@@ -38,7 +38,19 @@ export const PostEditView = {
       published_at: '',
       categories: [],
       tags: [],
+      // فیلدهای سفارشی؛ قالب‌هایی مثل قالب آتلیه از این‌ها استفاده می‌کنند
+      subtitle: '',
+      shoot_location: '',
+      video_provider: '',
+      video_aparat: '',
+      video_file: '',
+      video_poster: '',
     });
+
+    // گالری با شیء کامل رسانه نگه داشته می‌شود تا پیش‌نمایش داشته باشیم؛
+    // هنگام ذخیره فقط شناسه‌ها فرستاده می‌شوند.
+    const gallery = ref([]);
+    const galleryPicker = ref(false);
 
     const categories = ref([]);
     const parentOptions = ref([]);
@@ -100,7 +112,15 @@ export const PostEditView = {
             published_at: post.published_at ? post.published_at.replace(' ', 'T').slice(0, 16) : '',
             categories: (post.categories || []).map((c) => c.id),
             tags: (post.tags || []).map((t) => t.name),
+            subtitle: post.meta?.subtitle || '',
+            shoot_location: post.meta?.shoot_location || '',
+            video_provider: post.meta?.video_provider || '',
+            video_aparat: post.meta?.video_aparat || '',
+            video_file: post.meta?.video_file || '',
+            video_poster: post.meta?.video_poster || '',
           };
+
+          gallery.value = post.gallery || [];
 
           slugEdited.value = true;
         }
@@ -156,6 +176,16 @@ export const PostEditView = {
 
       const payload = { ...form.value, type: props.type };
 
+      payload.meta = {
+        gallery: gallery.value.map((item) => item.id),
+        subtitle: form.value.subtitle,
+        shoot_location: form.value.shoot_location,
+        video_provider: form.value.video_provider,
+        video_aparat: form.value.video_aparat,
+        video_file: form.value.video_file,
+        video_poster: form.value.video_poster,
+      };
+
       if (statusOverride) {
         payload.status = statusOverride;
       }
@@ -181,6 +211,33 @@ export const PostEditView = {
       } finally {
         saving.value = false;
       }
+    };
+
+    /* ─── گالری ────────────────────────────────────────────── */
+    const onGallerySelect = (items) => {
+      galleryPicker.value = false;
+
+      // تصویر تکراری دوباره اضافه نمی‌شود
+      const existing = new Set(gallery.value.map((item) => item.id));
+
+      gallery.value = gallery.value.concat(items.filter((item) => !existing.has(item.id)));
+      dirty.value = true;
+    };
+
+    const removeFromGallery = (index) => {
+      gallery.value.splice(index, 1);
+      dirty.value = true;
+    };
+
+    /** جابه‌جایی یک تصویر در ترتیب گالری */
+    const moveInGallery = (index, step) => {
+      const target = index + step;
+
+      if (target < 0 || target >= gallery.value.length) return;
+
+      const [item] = gallery.value.splice(index, 1);
+      gallery.value.splice(target, 0, item);
+      dirty.value = true;
     };
 
     /** بازگشت به فهرست با هشدار در صورت تغییرات ذخیره‌نشده */
@@ -237,6 +294,7 @@ export const PostEditView = {
     return {
       form, categories, parentOptions, loading, saving, dirty, errors,
       confirmLeave, isNew, isPage, labels, publicUrl, statusOptions, slugEdited,
+      gallery, galleryPicker, onGallerySelect, removeFromGallery, moveInGallery,
       save, goBack, suggestSlug, toggleCategory, can, navigate,
     };
   },
@@ -312,6 +370,28 @@ export const PostEditView = {
                 <textarea v-model="form.excerpt" class="textarea" maxlength="500" rows="3"
                           placeholder="اگر خالی بماند، به‌صورت خودکار از ابتدای محتوا ساخته می‌شود."></textarea>
                 <div class="field-hint">{{ (form.excerpt || '').length.toLocaleString('fa-IR') }} از ۵۰۰ کاراکتر</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">اطلاعات تکمیلی</span>
+                <span class="small faint">اختیاری — قالب‌هایی مثل قالب آتلیه این‌ها را نشان می‌دهند</span>
+              </div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <div class="field mb-0">
+                    <label class="field-label">زیرعنوان</label>
+                    <input v-model="form.subtitle" type="text" class="input" maxlength="200"
+                           placeholder="مثلاً: عکاسی عروسی سارا و امیر">
+                  </div>
+
+                  <div class="field mb-0">
+                    <label class="field-label">محل عکاسی</label>
+                    <input v-model="form.shoot_location" type="text" class="input" maxlength="200"
+                           placeholder="مثلاً: باغ ارم، شیراز">
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -409,6 +489,9 @@ export const PostEditView = {
           </div>
         </div>
       </template>
+
+      <MediaPicker v-if="galleryPicker" multiple images-only title="افزودن به گالری"
+                   @select="onGallerySelect" @close="galleryPicker = false" />
 
       <ConfirmDialog v-if="confirmLeave"
                      title="تغییرات ذخیره‌نشده"
