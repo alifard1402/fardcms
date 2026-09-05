@@ -19,7 +19,8 @@ $problems = [];
 /**
  * ثبت یک نتیجه بررسی
  *
- * @param 'ok'|'warn'|'fail' $state
+ * @param 'ok'|'warn'|'fail'|'info' $state  حالت info صرفاً توضیحی است و
+ *        نشانه مشکل نیست؛ در شمارش هشدارها هم نمی‌آید.
  */
 function check(string $label, string $state, string $value, string $hint = ''): void
 {
@@ -148,11 +149,20 @@ if (function_exists('apache_get_modules')) {
     $rewriteLoaded = in_array('mod_rewrite', apache_get_modules(), true);
 }
 
+// تابع apache_get_modules() فقط وقتی وجود دارد که PHP به‌صورت ماژول آپاچی
+// اجرا شود. روی CGI/FPM — که امروز رایج‌تر است — این تابع نیست و نمی‌توان
+// از خود آپاچی پرسید. این «ندانستن» ایراد نیست، چون آزمون زندهٔ بالا
+// همان سؤال را به شکل قطعی جواب می‌دهد.
 check('mod_rewrite',
-    $rewriteLoaded === true ? 'ok' : ($rewriteLoaded === false ? 'fail' : 'warn'),
+    $rewriteLoaded === true ? 'ok' : ($rewriteLoaded === false ? 'fail' : 'info'),
     $rewriteLoaded === true ? 'فعال است'
-        : ($rewriteLoaded === false ? 'فعال نیست' : 'قابل تشخیص نیست (PHP به‌صورت CGI/FPM اجرا می‌شود)'),
-    $rewriteLoaded === false ? 'نشانی‌های تمیز کار نمی‌کنند — گزینه پایین را خاموش کنید' : '');
+        : ($rewriteLoaded === false ? 'فعال نیست'
+        : 'از اینجا قابل تشخیص نیست — PHP به‌صورت ' . PHP_SAPI . ' اجرا می‌شود'),
+    $rewriteLoaded === false
+        ? 'نشانی‌های تمیز کار نمی‌کنند — گزینه «نشانی‌های تمیز» را خاموش کنید'
+        : ($rewriteLoaded === null
+            ? 'اشکالی ندارد؛ نتیجه «آزمون زنده مسیریابی» در بالای همین صفحه ملاک است'
+            : ''));
 
 $htaccessExists = is_file(__DIR__ . '/.htaccess');
 check('فایل .htaccess', $htaccessExists ? 'ok' : 'warn',
@@ -251,6 +261,8 @@ function renderReport(): void
   tr:last-child td{border-bottom:none}
   .st{width:34px;text-align:center;font-weight:700}
   .st.ok{color:#4ade80}.st.warn{color:#fbbf24}.st.fail{color:#f87171}
+  .st.info{color:rgba(255,255,255,.45)}
+  tr.info .hint{color:rgba(255,255,255,.5)}
   .lbl{width:38%;color:rgba(255,255,255,.85)}
   .val{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;
        unicode-bidi:plaintext;direction:ltr;text-align:left}
@@ -312,8 +324,13 @@ function renderReport(): void
   <h2>جزئیات بررسی</h2>
   <table>
     <?php foreach ($rows as $r): ?>
-      <tr>
-        <td class="st <?= $r['state'] ?>"><?= $r['state'] === 'ok' ? '✓' : ($r['state'] === 'warn' ? '!' : '✕') ?></td>
+      <tr class="<?= $r['state'] ?>">
+        <td class="st <?= $r['state'] ?>"><?= match ($r['state']) {
+            'ok'   => '✓',
+            'warn' => '!',
+            'info' => 'i',
+            default => '✕',
+        } ?></td>
         <td class="lbl"><?= h($r['label']) ?></td>
         <td class="val">
           <?= h($r['value']) ?>
