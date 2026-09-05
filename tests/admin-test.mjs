@@ -149,6 +149,50 @@ chk('settings form renders', await page.locator('.card-title:has-text("هویت 
 chk('settings tabs render', (await page.locator('.status-filter').count()) >= 4);
 await page.screenshot({ path: 'shot-settings.png', fullPage: true });
 
+// ─── کلیدهای روشن/خاموش (رگرسیون: دستگیره نباید از ریل بیرون بزند) ───
+// در راست‌به‌چپ inset-inline-end یعنی «چپ» ولی translateX همیشه فیزیکی است؛
+// ترکیب این دو باعث می‌شد دستگیره در حالت روشن بیرون از ریل بیفتد.
+await page.click('.status-filter:has-text("گفت‌وگو")');
+await page.waitForSelector('.switch', { timeout: 5000 });
+const knob = i => page.locator('.switch').nth(i).evaluate(el => {
+  const cs = getComputedStyle(el, '::after');
+  const m = cs.transform.match(/matrix\(([^)]+)\)/);
+  const dx = m ? parseFloat(m[1].split(',')[4]) : 0;
+  const left = parseFloat(cs.left) + dx, w = parseFloat(cs.width);
+  return { on: el.classList.contains('on'), track: el.getBoundingClientRect().width,
+           left, right: left + w };
+});
+const switchCount = await page.locator('.switch').count();
+chk('switches render on settings', switchCount >= 1, `count ${switchCount}`);
+for (let i = 0; i < switchCount; i++) {
+  const a = await knob(i);
+  await page.locator('.switch').nth(i).click();
+  await page.waitForTimeout(400);
+  const b = await knob(i);
+  const on = a.on ? a : b, off = a.on ? b : a;
+  const inside = k => k.left >= -1 && k.right <= k.track + 1;
+  chk(`switch ${i + 1} knob stays inside track`, inside(a) && inside(b),
+      `off [${off.left}..${off.right}] on [${on.left}..${on.right}] track ${a.track}`);
+  chk(`switch ${i + 1} slides right→left when on (RTL)`,
+      on.left < off.left - 12, `off ${off.left} on ${on.left}`);
+  await page.locator('.switch').nth(i).click();  // بازگرداندن به حالت اولیه
+  await page.waitForTimeout(300);
+}
+// همان کلید در حالت چپ‌به‌راست باید برعکس حرکت کند
+await page.evaluate(() => document.documentElement.setAttribute('dir', 'ltr'));
+await page.waitForTimeout(300);
+const la = await knob(0);
+await page.locator('.switch').nth(0).click();
+await page.waitForTimeout(400);
+const lb = await knob(0);
+const lOn = la.on ? la : lb, lOff = la.on ? lb : la;
+chk('switch slides left→right when on (LTR)',
+    lOn.left > lOff.left + 12 && lOff.left >= -1 && lOn.right <= lOn.track + 1,
+    `off [${lOff.left}..${lOff.right}] on [${lOn.left}..${lOn.right}]`);
+await page.locator('.switch').nth(0).click();
+await page.evaluate(() => document.documentElement.setAttribute('dir', 'rtl'));
+await page.waitForTimeout(300);
+
 // ─── profile ───
 console.log('=== پروفایل ===');
 await page.click('.user-trigger');

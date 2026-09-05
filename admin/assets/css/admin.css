@@ -531,6 +531,11 @@ svg { flex-shrink: 0; }
 .checkbox.checked svg { opacity: 1; }
 .checkbox-text { font-size: 13px; line-height: 1.7; }
 
+/* اینجا عمداً از inset-inline-* استفاده نشده است: در حالت راست‌به‌چپ
+   inset-inline-end یعنی «چپ»، اما transform: translateX از جهت متن پیروی
+   نمی‌کند و همیشه محور فیزیکی X را جابه‌جا می‌کند. ترکیب این دو باعث می‌شد
+   دستگیره در حالت روشن از ریل بیرون بزند. پس مبدأ با خاصیت فیزیکی تعیین
+   می‌شود و برای هر جهت جداگانه نوشته شده است. */
 .switch {
   width: 42px;
   height: 24px;
@@ -544,7 +549,8 @@ svg { flex-shrink: 0; }
   content: '';
   position: absolute;
   top: 3px;
-  inset-inline-end: 3px;
+  right: 3px;
+  left: auto;
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -553,8 +559,10 @@ svg { flex-shrink: 0; }
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 .switch.on { background: var(--accent); }
+/* ریل ۴۲ - دستگیره ۱۸ - فاصله ۳ از هر طرف = ۱۸ پیکسل مسیر حرکت */
 .switch.on::after { transform: translateX(-18px); }
-html[dir="rtl"] .switch.on::after { transform: translateX(-18px); }
+html[dir="ltr"] .switch::after { right: auto; left: 3px; }
+html[dir="ltr"] .switch.on::after { transform: translateX(18px); }
 
 .form-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .form-actions {
