@@ -97,6 +97,22 @@ await page.screenshot({ path: 'shot-editor.png', fullPage: true });
 await page.click('.toolbar .btn-primary');
 await page.waitForSelector('.toast', { timeout: 8000 });
 const toastText = await page.locator('.toast-message').first().textContent();
+// کارت‌های گالری و ویدیو در ستون کنار ویرایشگر
+// (یک بار در ویرایشی ناتمام از قالب حذف شدند و هیچ تستی متوجه نشد)
+// انتظار صریح: خواندن بی‌درنگ فهرست کارت‌ها گاهی پیش از تکمیل رندر
+// ستون کنار انجام می‌شد و تست بی‌دلیل رد می‌شد
+await page.waitForSelector('.card-title:text-is("گالری تصاویر")', { timeout: 8000 });
+const editorCards = await page.locator('.card-title').allInnerTexts();
+chk('gallery card in editor', editorCards.some(t => t.includes('گالری')), editorCards.join(' | '));
+chk('video card in editor', editorCards.some(t => t.includes('ویدیو')));
+chk('extra fields card in editor', editorCards.some(t => t.includes('اطلاعات تکمیلی')));
+
+await page.selectOption('.card:has(.card-title:text-is("ویدیو")) select', 'aparat');
+await page.waitForTimeout(200);
+chk('aparat field appears when chosen',
+    await page.locator('input[placeholder*="aparat.com"]').isVisible());
+await page.selectOption('.card:has(.card-title:text-is("ویدیو")) select', '');
+
 chk('save shows success toast', /ذخیره|ایجاد/.test(toastText), toastText);
 await page.waitForTimeout(600);
 chk('url switched to edit mode', /#\/posts\/\d+/.test(page.url()), page.url());
@@ -156,8 +172,10 @@ await page.click('.status-filter:has-text("قالب")');
 await page.waitForSelector('.theme-card', { timeout: 5000 });
 chk('theme picker lists installed themes', (await page.locator('.theme-card').count()) >= 1);
 chk('active theme is marked', (await page.locator('.theme-card.active').count()) === 1);
+// نام از theme.json خوانده می‌شود، نه از نام پوشه — به قالبِ فعال
+// وابسته نیست تا با عوض شدن آن، تست شکننده نشود
 chk('theme name shown from theme.json',
-    (await page.locator('.theme-card.active .theme-name').innerText()).includes('پیش‌فرض'));
+    (await page.locator('.theme-name').allInnerTexts()).some(n => n.includes('قالب پیش‌فرض')));
 
 // ─── کلیدهای روشن/خاموش (رگرسیون: دستگیره نباید از ریل بیرون بزند) ───
 // در راست‌به‌چپ inset-inline-end یعنی «چپ» ولی translateX همیشه فیزیکی است؛

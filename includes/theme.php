@@ -60,7 +60,10 @@ function installedThemes(): array
 
         foreach (['screenshot.jpg', 'screenshot.png', 'screenshot.webp'] as $file) {
             if (is_file("$dir/$file")) {
-                $shot = assetUrl("themes/$slug/$file");
+                // نشانی کامل و نه assetUrl: پایه‌ی assetUrl از مسیر اسکریپت
+                // اجراشده ساخته می‌شود و این فهرست از api/settings/ صدا زده
+                // می‌شود، پس نشانی نسبی به /api/settings/themes/... می‌رسید.
+                $shot = siteUrl("themes/$slug/$file");
                 break;
             }
         }

@@ -189,6 +189,13 @@ r=$(curl -s -b $J "$B/api/settings/index.php")
 chk "themes listed" '"themes"' "$r"
 chk "default theme listed" '"slug":"default"' "$r"
 chk "temp theme discovered" '__test-theme' "$r"
+
+# پیش‌نمایش قالب باید نشانی کامل بگیرد: پایه‌ی assetUrl از مسیر اسکریپت
+# ساخته می‌شود و این پاسخ از api/settings/ می‌آید
+printf 'x' > $TMPTHEME/screenshot.jpg
+r=$(curl -s -b $J "$B/api/settings/index.php")
+chk "theme screenshot url is absolute" '"screenshot":"http' "$r"
+nchk "theme screenshot url not api-relative" 'api/settings/themes' "$r"
 nchk "folder without index.php ignored" '__not-a-theme' "$r"
 
 r=$(curl -s -b $J -X POST -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" \

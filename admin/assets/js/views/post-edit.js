@@ -428,6 +428,80 @@ export const PostEditView = {
               </div>
             </div>
 
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">گالری تصاویر</span>
+                <span class="badge" v-if="gallery.length">{{ gallery.length }}</span>
+              </div>
+              <div class="card-body">
+                <div v-if="gallery.length" class="gallery-thumbs">
+                  <div v-for="(item, index) in gallery" :key="item.id" class="gallery-thumb">
+                    <img :src="item.thumbnail_url || item.url" :alt="item.alt_text || ''" loading="lazy">
+                    <div class="gallery-thumb-bar">
+                      <button type="button" @click="moveInGallery(index, -1)"
+                              :disabled="index === 0" title="جابه‌جایی به عقب">
+                        <Icon name="chevronRight" :size="13" />
+                      </button>
+                      <button type="button" @click="removeFromGallery(index)" title="حذف از گالری">
+                        <Icon name="trash" :size="13" />
+                      </button>
+                      <button type="button" @click="moveInGallery(index, 1)"
+                              :disabled="index === gallery.length - 1" title="جابه‌جایی به جلو">
+                        <Icon name="chevronLeft" :size="13" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="btn btn-ghost btn-block mt-sm" type="button" @click="galleryPicker = true">
+                  <Icon name="plus" :size="15" />
+                  افزودن تصویر
+                </button>
+
+                <div class="field-hint">
+                  ترتیب همین‌جا تعیین می‌شود و قالب سایت به همین ترتیب نمایش می‌دهد.
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">ویدیو</span></div>
+              <div class="card-body">
+                <div class="field">
+                  <label class="field-label">محل نگهداری ویدیو</label>
+                  <select v-model="form.video_provider" class="select">
+                    <option value="">بدون ویدیو</option>
+                    <option value="aparat">آپارات</option>
+                    <option value="file">فایل آپلودشده</option>
+                  </select>
+                </div>
+
+                <div class="field" v-if="form.video_provider === 'aparat'">
+                  <label class="field-label">نشانی یا شناسه ویدیوی آپارات</label>
+                  <input v-model="form.video_aparat" type="text" class="input" dir="ltr"
+                         placeholder="https://www.aparat.com/v/XXXXX">
+                  <div class="field-hint">
+                    نشانی صفحه ویدیو را بچسبانید؛ شناسه‌اش خودکار بیرون کشیده می‌شود.
+                  </div>
+                </div>
+
+                <div class="field" v-if="form.video_provider === 'file'">
+                  <label class="field-label">نشانی فایل ویدیو</label>
+                  <input v-model="form.video_file" type="text" class="input" dir="ltr"
+                         placeholder="uploads/1404/06/clip.mp4">
+                  <div class="field-hint">
+                    از کتابخانه رسانه آپلود کنید و نشانی‌اش را اینجا بگذارید. برای فیلم‌های
+                    بلند آپارات مناسب‌تر است؛ هاست اشتراکی پهنای باند کمی دارد.
+                  </div>
+                </div>
+
+                <div class="field mb-0" v-if="form.video_provider">
+                  <label class="field-label">تصویر پیش‌نمایش ویدیو</label>
+                  <FeaturedImagePicker v-model="form.video_poster" />
+                </div>
+              </div>
+            </div>
+
             <!-- دسته‌ها و برچسب‌ها فقط برای نوشته -->
             <template v-if="!isPage">
               <div class="card">
